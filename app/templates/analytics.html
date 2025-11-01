@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}分析中心{% endblock %}
+{% block content %}
+<section class="bg-white shadow rounded p-6 space-y-6">
+  <div class="grid md:grid-cols-4 gap-4 text-sm">
+    <div class="stat-card">
+      <p>总收入</p>
+      <h3>¥{{ '%.2f'|format(summary.total_income) }}</h3>
+    </div>
+    <div class="stat-card">
+      <p>总支出</p>
+      <h3>¥{{ '%.2f'|format(summary.total_expense) }}</h3>
+    </div>
+    <div class="stat-card">
+      <p>投资金额</p>
+      <h3>¥{{ '%.2f'|format(summary.total_invested) }}</h3>
+    </div>
+    <div class="stat-card">
+      <p>现金结余</p>
+      <h3>¥{{ '%.2f'|format(summary.net_cash) }}</h3>
+    </div>
+  </div>
+  <div>
+    <h2 class="text-lg font-semibold mb-3">月度净现金流</h2>
+    <div id="analytics-chart" class="h-80"></div>
+  </div>
+</section>
+<script>
+  (function () {
+    if (!window.PFISPlotlyReady) {
+      return;
+    }
+    const dataset = {{ chart_data|safe }};
+    window.PFISPlotlyReady(function () {
+      Plotly.newPlot(
+        'analytics-chart',
+        [
+          {
+            x: dataset.labels,
+            y: dataset.values,
+            type: 'bar',
+            marker: { color: '#0ea5e9' },
+          },
+        ],
+        {
+          margin: { t: 30, r: 10, l: 40, b: 40 },
+        },
+      );
+    });
+  })();
+</script>
+{% endblock %}
