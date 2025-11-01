@@ -87,7 +87,12 @@ class CashFlow(Base):
     account = relationship("DimAccount", back_populates="cash_flows")
     category = relationship("DimCategory", back_populates="cash_flows")
     source_type = relationship("DimSourceType", back_populates="cash_flows")
-    investment = relationship("InvestmentLog", back_populates="cashflow_link", uselist=False)
+    investment = relationship(
+        "InvestmentLog",
+        back_populates="cashflow_link",
+        uselist=False,
+        foreign_keys=[link_investment_id],
+    )
 
 
 class ProductMaster(Base):
@@ -123,7 +128,11 @@ class InvestmentLog(Base):
     product = relationship("ProductMaster", back_populates="investments")
     action = relationship("DimActionType", back_populates="investment_logs")
     channel = relationship("DimAccount", back_populates="investment_logs")
-    cashflow_link = relationship("CashFlow", back_populates="investment")
+    cashflow_link = relationship(
+        "CashFlow",
+        back_populates="investment",
+        foreign_keys=[cashflow_link_id],
+    )
 
 
 class ProductMetrics(Base):
