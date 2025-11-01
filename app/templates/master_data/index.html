@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}主数据维护 - PFIS{% endblock %}
+{% block content %}
+<section>
+  <div class="flex flex-col gap-2 mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">主数据维护</h1>
+    <p class="text-sm text-gray-500">统一管理账户、类别、指标等维度数据，支持逻辑删除与恢复。</p>
+  </div>
+  {% set dims = [
+    ('dim_account', '账户', master_data.accounts),
+    ('dim_category', '类别', master_data.categories),
+    ('dim_source_type', '来源类型', master_data.source_types),
+    ('dim_action_type', '动作类型', master_data.action_types),
+    ('dim_product_type', '产品类型', master_data.product_types),
+    ('dim_risk_level', '风险等级', master_data.risk_levels),
+    ('dim_metric', '指标类型', master_data.metrics),
+  ] %}
+  <div class="bg-white shadow-md rounded-xl p-6">
+    <div class="flex flex-wrap gap-3 border-b border-gray-100 pb-4">
+      {% for table, title, items in dims %}
+      <button
+        type="button"
+        data-master-tab="{{ table }}"
+        onclick="window.PFIS.switchMasterTab('{{ table }}')"
+        class="flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ 'bg-blue-600 text-white border-blue-600' if loop.first else 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600' }}"
+      >
+        {{ title }}
+        <span class="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-600">{{ items|length }}</span>
+      </button>
+      {% endfor %}
+    </div>
+    <div class="pt-6 space-y-6">
+      {% for table, title, items in dims %}
+      <div
+        id="tab-{{ table }}"
+        data-master-panel="{{ table }}"
+        class="space-y-4 {{ '' if loop.first else 'hidden' }}"
+      >
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="text-lg font-medium text-gray-700">{{ title }}</h2>
+            <p class="text-xs text-gray-400">共 {{ items|length }} 条记录</p>
+          </div>
+          <form
+            class="flex w-full max-w-md items-center gap-3"
+            hx-post="/master_data"
+            hx-target="#table-{{ table }}"
+            hx-swap="innerHTML"
+          >
+            <input type="hidden" name="table" value="{{ table }}" />
+            <input
+              type="text"
+              name="name"
+              class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              placeholder="新增 {{ title }}"
+              required
+            />
+            <button
+              type="submit"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            >
+              新增
+            </button>
+          </form>
+        </div>
+        <div id="table-{{ table }}" class="overflow-hidden rounded-xl border border-gray-100">
+          {% include "master_data/table.html" %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
