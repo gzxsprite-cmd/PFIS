@@ -1,49 +1,68 @@
 from __future__ import annotations
 
-from datetime import datetime, date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from .database import Base
 
 
-class DimAccount(Base):
+class StatusMixin:
+    status = Column(String, default="active", nullable=False)
+
+
+class DimAccount(Base, StatusMixin):
     __tablename__ = "dim_account"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
-    status = Column(String, default="active")
     created_at = Column(DateTime, default=datetime.utcnow)
     last_used = Column(DateTime)
 
     cash_flows = relationship("CashFlow", back_populates="account")
-    investment_logs = relationship("InvestmentLog", back_populates="channel")
+    investment_logs = relationship("InvestmentLog", back_populates="channel_account")
 
 
-class DimCategory(Base):
+class DimCategory(Base, StatusMixin):
     __tablename__ = "dim_category"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     parent_id = Column(Integer, ForeignKey("dim_category.id"))
-    status = Column(String, default="active")
 
     parent = relationship("DimCategory", remote_side=[id])
     cash_flows = relationship("CashFlow", back_populates="category")
 
 
-class DimProductType(Base):
+class DimSourceType(Base, StatusMixin):
+    __tablename__ = "dim_source_type"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+
+    cash_flows = relationship("CashFlow", back_populates="source_type")
+
+
+class DimActionType(Base, StatusMixin):
+    __tablename__ = "dim_action_type"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+
+    investment_logs = relationship("InvestmentLog", back_populates="action")
+
+
+class DimProductType(Base, StatusMixin):
     __tablename__ = "dim_product_type"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
-    status = Column(String, default="active")
 
     products = relationship("ProductMaster", back_populates="product_type")
 
 
-class DimRiskLevel(Base):
+class DimRiskLevel(Base, StatusMixin):
     __tablename__ = "dim_risk_level"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -53,35 +72,29 @@ class DimRiskLevel(Base):
     products = relationship("ProductMaster", back_populates="risk_level")
 
 
-class DimActionType(Base):
-    __tablename__ = "dim_action_type"
+class DimMetric(Base, StatusMixin):
+    __tablename__ = "dim_metric"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
+    unit = Column(String)
+    description = Column(Text)
 
-    investment_logs = relationship("InvestmentLog", back_populates="action")
-
-
-class DimSourceType(Base):
-    __tablename__ = "dim_source_type"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, nullable=False)
-
-    cash_flows = relationship("CashFlow", back_populates="source_type")
+    metrics = relationship("ProductMetric", back_populates="metric")
 
 
 class CashFlow(Base):
     __tablename__ = "cash_flow"
 
     id = Column(Integer, primary_key=True, index=True)
-    date = Column(Date, default=date.today)
+    date = Column(Date, default=date.today, nullable=False)
     account_id = Column(Integer, ForeignKey("dim_account.id"), nullable=False)
     category_id = Column(Integer, ForeignKey("dim_category.id"))
     flow_type = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
     source_type_id = Column(Integer, ForeignKey("dim_source_type.id"))
     remark = Column(String)
+    status = Column(String, default="active", nullable=False)
     link_investment_id = Column(Integer, ForeignKey("investment_log.id"))
 
     account = relationship("DimAccount", back_populates="cash_flows")
@@ -99,17 +112,21 @@ class ProductMaster(Base):
     __tablename__ = "product_master"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_name = Column(String, unique=True, nullable=False)
+    name = Column(String, unique=True, nullable=False)
     type_id = Column(Integer, ForeignKey("dim_product_type.id"))
     risk_level_id = Column(Integer, ForeignKey("dim_risk_level.id"))
     launch_date = Column(Date)
     remark = Column(Text)
-    is_active = Column(Boolean, default=True)
+    status = Column(String, default="active", nullable=False)
 
     product_type = relationship("DimProductType", back_populates="products")
     risk_level = relationship("DimRiskLevel", back_populates="products")
-    metrics = relationship("ProductMetrics", back_populates="product", cascade="all, delete-orphan")
-    holdings = relationship("HoldingStatus", back_populates="product", uselist=False)
+    metrics = relationship(
+        "ProductMetric",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+    holding = relationship("HoldingStatus", back_populates="product", uselist=False)
     investments = relationship("InvestmentLog", back_populates="product")
 
 
@@ -121,13 +138,14 @@ class InvestmentLog(Base):
     product_id = Column(Integer, ForeignKey("product_master.id"), nullable=False)
     action_id = Column(Integer, ForeignKey("dim_action_type.id"), nullable=False)
     amount = Column(Float, nullable=False)
-    channel_id = Column(Integer, ForeignKey("dim_account.id"))
-    cashflow_link_id = Column(Integer, ForeignKey("cash_flow.id"))
+    channel_account_id = Column(Integer, ForeignKey("dim_account.id"))
     remark = Column(Text)
+    status = Column(String, default="active", nullable=False)
+    cashflow_link_id = Column(Integer, ForeignKey("cash_flow.id"))
 
     product = relationship("ProductMaster", back_populates="investments")
     action = relationship("DimActionType", back_populates="investment_logs")
-    channel = relationship("DimAccount", back_populates="investment_logs")
+    channel_account = relationship("DimAccount", back_populates="investment_logs")
     cashflow_link = relationship(
         "CashFlow",
         foreign_keys=[cashflow_link_id],
@@ -136,19 +154,19 @@ class InvestmentLog(Base):
     )
 
 
-class ProductMetrics(Base):
+class ProductMetric(Base):
     __tablename__ = "product_metrics"
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("product_master.id"), nullable=False)
+    metric_id = Column(Integer, ForeignKey("dim_metric.id"), nullable=False)
     record_date = Column(Date, nullable=False)
-    metric_1 = Column(Float)
-    metric_2 = Column(Float)
-    metric_3 = Column(Float)
+    value = Column(Float, nullable=False)
     source = Column(String)
     remark = Column(Text)
 
     product = relationship("ProductMaster", back_populates="metrics")
+    metric = relationship("DimMetric", back_populates="metrics")
 
 
 class HoldingStatus(Base):
@@ -161,7 +179,7 @@ class HoldingStatus(Base):
     avg_yield = Column(Float, default=0)
     last_update = Column(Date)
 
-    product = relationship("ProductMaster", back_populates="holdings")
+    product = relationship("ProductMaster", back_populates="holding")
 
 
 class OcrPending(Base):
@@ -170,6 +188,6 @@ class OcrPending(Base):
     id = Column(Integer, primary_key=True, index=True)
     module = Column(String, nullable=False)
     image_path = Column(String, nullable=False)
-    status = Column(String, default="pending")
-    extracted_data = Column(Text)
+    status = Column(String, default="pending", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    remark = Column(Text)

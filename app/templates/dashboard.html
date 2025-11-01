@@ -15,15 +15,36 @@
     <p class="text-2xl font-semibold text-indigo-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
   </div>
 </section>
-<section class="mt-8 bg-white shadow rounded p-6">
-  <h2 class="text-lg font-semibold mb-4">开始你的操作</h2>
-  <div class="grid md:grid-cols-3 gap-4 text-sm">
-    <a href="/cashflow" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">记录今日收支</a>
-    <a href="/investment" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">新增理财交易</a>
-    <a href="/products" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">维护理财产品</a>
-    <a href="/simulation" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">进行收益模拟</a>
-    <a href="/analytics" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">查看分析报告</a>
-    <a href="/master-data" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">维护主数据</a>
+<section class="mt-8 grid lg:grid-cols-5 gap-4">
+  <div class="card lg:col-span-3">
+    <h2 class="text-lg font-semibold mb-4">月度净现金流</h2>
+    <div id="dashboard-cashflow" class="h-64"></div>
+  </div>
+  <div class="card lg:col-span-2 space-y-3">
+    <h2 class="text-lg font-semibold">快捷操作</h2>
+    <div class="grid gap-2 text-sm">
+      <a href="/cash_flow" class="p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-slate-50">记录今日收支</a>
+      <a href="/investment" class="p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-slate-50">新增理财交易</a>
+      <a href="/product_tracker/products" class="p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-slate-50">维护理财产品</a>
+      <a href="/simulation" class="p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-slate-50">进行收益模拟</a>
+      <a href="/analytics" class="p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-slate-50">查看分析报告</a>
+      <a href="/master_data" class="p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-slate-50">维护主数据</a>
+    </div>
   </div>
 </section>
+<script>
+  window.PFISPlotlyReady(function () {
+    const data = {{ monthly | tojson }};
+    const trace = {
+      x: data.map((row) => row[0]),
+      y: data.map((row) => row[1]),
+      type: 'scatter',
+      fill: 'tozeroy',
+      line: { color: '#22d3ee', width: 3 },
+      marker: { size: 6 },
+    };
+    const layout = { margin: { t: 24, r: 16, b: 40, l: 40 }, template: 'plotly_white' };
+    Plotly.newPlot('dashboard-cashflow', [trace], layout, { displayModeBar: false });
+  });
+</script>
 {% endblock %}
