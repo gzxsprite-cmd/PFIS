@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
@@ -77,7 +77,7 @@ def list_products(db: Session):
     return list(db.execute(stmt).scalars())
 
 
-def get_product(db: Session, product_id: int) -> models.ProductMaster | None:
+def get_product(db: Session, product_id: int) -> Optional[models.ProductMaster]:
     return db.get(models.ProductMaster, product_id)
 
 

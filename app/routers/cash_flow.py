@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
@@ -51,12 +52,12 @@ async def cashflow_add(
     db: Session = Depends(get_db),
     date_value: str = Form(...),
     account_id: str = Form(...),
-    category_id: str | None = Form(default=None),
+    category_id: Optional[str] = Form(default=None),
     flow_type: str = Form(...),
     amount: str = Form(...),
-    source_type_id: str | None = Form(default=None),
-    remark: str | None = Form(default=None),
-    receipt: UploadFile | None = File(default=None),
+    source_type_id: Optional[str] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
+    receipt: Optional[UploadFile] = File(default=None),
 ):
     payload = CashFlowCreate(
         date=date.fromisoformat(date_value),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
@@ -32,7 +33,9 @@ async def investment_list(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/form", response_class=HTMLResponse)
-async def investment_form(request: Request, db: Session = Depends(get_db), target: str | None = None):
+async def investment_form(
+    request: Request, db: Session = Depends(get_db), target: Optional[str] = None
+):
     master_data = crud.list_master_data(db)
     products = crud.list_products(db)
     target_selector = f"#{target}" if target else "#investment-table"
@@ -55,9 +58,9 @@ async def investment_add(
     product_id: str = Form(...),
     action_id: str = Form(...),
     amount: str = Form(...),
-    channel_id: str | None = Form(default=None),
-    remark: str | None = Form(default=None),
-    create_cashflow: str | None = Form(default=None),
+    channel_id: Optional[str] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
+    create_cashflow: Optional[str] = Form(default=None),
 ):
     payload = InvestmentLogCreate(
         date=date.fromisoformat(date_value),

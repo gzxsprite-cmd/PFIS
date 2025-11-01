@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -35,10 +36,10 @@ async def product_add(
     request: Request,
     db: Session = Depends(get_db),
     product_name: str = Form(...),
-    type_id: str | None = Form(default=None),
-    risk_level_id: str | None = Form(default=None),
-    launch_date: str | None = Form(default=None),
-    remark: str | None = Form(default=None),
+    type_id: Optional[str] = Form(default=None),
+    risk_level_id: Optional[str] = Form(default=None),
+    launch_date: Optional[str] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
 ):
     payload = ProductMasterCreate(
         product_name=product_name,
@@ -87,11 +88,11 @@ async def add_metric(
     product_id: int,
     db: Session = Depends(get_db),
     record_date: str = Form(...),
-    metric_1: str | None = Form(default=None),
-    metric_2: str | None = Form(default=None),
-    metric_3: str | None = Form(default=None),
-    source: str | None = Form(default=None),
-    remark: str | None = Form(default=None),
+    metric_1: Optional[str] = Form(default=None),
+    metric_2: Optional[str] = Form(default=None),
+    metric_3: Optional[str] = Form(default=None),
+    source: Optional[str] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
 ):
     payload = ProductMetricsCreate(
         product_id=product_id,
