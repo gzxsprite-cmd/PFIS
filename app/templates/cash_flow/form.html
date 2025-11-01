@@ -1,9 +1,8 @@
 <form
   class="grid md:grid-cols-3 gap-4 text-sm"
-  hx-post="/cashflow/add"
+  hx-post="/cash_flow"
   hx-target="#cashflow-table"
   hx-swap="outerHTML"
-  hx-encoding="multipart/form-data"
 >
   <div>
     <label class="block text-slate-500 mb-1">日期</label>
@@ -38,7 +37,7 @@
     <input type="number" step="0.01" name="amount" class="input" required />
   </div>
   <div>
-    <label class="block text-slate-500 mb-1">来源</label>
+    <label class="block text-slate-500 mb-1">来源类型</label>
     <select name="source_type_id" class="input">
       <option value="">---</option>
       {% for source in master_data.source_types %}
@@ -46,15 +45,12 @@
       {% endfor %}
     </select>
   </div>
-  <div class="md:col-span-2">
+  <div class="md:col-span-3">
     <label class="block text-slate-500 mb-1">备注</label>
     <input type="text" name="remark" class="input" placeholder="可选" />
   </div>
-  <div>
-    <label class="block text-slate-500 mb-1">上传凭证</label>
-    <input type="file" name="receipt" class="input" />
-  </div>
-  <div class="md:col-span-3 flex justify-end">
-    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">保存</button>
+  <div class="md:col-span-3 flex justify-end gap-2">
+    <button type="reset" class="btn-secondary">重置</button>
+    <button type="submit" class="btn-primary">保存</button>
   </div>
 </form>

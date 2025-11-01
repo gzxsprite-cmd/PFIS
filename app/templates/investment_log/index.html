@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}理财操作 - PFIS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2 class="page-title">理财操作</h2>
+  <p class="page-subtitle">记录买入、赎回、分红等操作，并与账户维度联动。</p>
+</div>
+<div class="card space-y-6">
+  <div id="investment-form" hx-get="/investment/form" hx-trigger="load" hx-target="this" hx-swap="outerHTML">
+    <div class="text-sm text-slate-500">表单加载中...</div>
+  </div>
+  <div id="investment-table">
+    {% include "investment_log/table.html" %}
+  </div>
+</div>
+{% endblock %}

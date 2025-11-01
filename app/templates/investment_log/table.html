@@ -7,17 +7,31 @@
       <th class="px-3 py-2 text-right">金额</th>
       <th class="px-3 py-2 text-left">渠道</th>
       <th class="px-3 py-2 text-left">备注</th>
+      <th class="px-3 py-2 text-right">操作</th>
     </tr>
   </thead>
   <tbody>
     {% for item in investments %}
-    <tr class="border-b border-slate-200">
+    <tr class="border-b border-slate-200 {% if item.status == 'inactive' %}opacity-60{% endif %}">
       <td class="px-3 py-2">{{ item.date }}</td>
-      <td class="px-3 py-2">{{ item.product.product_name if item.product else '' }}</td>
+      <td class="px-3 py-2">{{ item.product.name if item.product else '' }}</td>
       <td class="px-3 py-2">{{ item.action.name if item.action else '' }}</td>
       <td class="px-3 py-2 text-right">{{ '%.2f'|format(item.amount) }}</td>
-      <td class="px-3 py-2">{{ item.channel.name if item.channel else '' }}</td>
+      <td class="px-3 py-2">{{ item.channel_account.name if item.channel_account else '' }}</td>
       <td class="px-3 py-2">{{ item.remark or '' }}</td>
+      <td class="px-3 py-2 text-right">
+        {% if item.status == 'active' %}
+        <button
+          class="text-rose-500 hover:text-rose-700"
+          hx-delete="/investment/{{ item.id }}"
+          hx-target="#investment-table"
+          hx-swap="outerHTML"
+          hx-confirm="确认逻辑删除该记录？"
+        >删除</button>
+        {% else %}
+        <span class="text-xs text-slate-400">已删除</span>
+        {% endif %}
+      </td>
     </tr>
     {% else %}
     <tr>

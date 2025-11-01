@@ -1,0 +1,55 @@
+<table class="min-w-full text-sm">
+  <thead class="bg-slate-100 text-slate-600">
+    <tr>
+      <th class="px-3 py-2 text-left">产品名称</th>
+      <th class="px-3 py-2 text-left">类型</th>
+      <th class="px-3 py-2 text-left">风险等级</th>
+      <th class="px-3 py-2 text-left">发行日期</th>
+      <th class="px-3 py-2 text-left">状态</th>
+      <th class="px-3 py-2 text-left">备注</th>
+      <th class="px-3 py-2 text-right">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products %}
+    <tr class="border-b border-slate-200 {% if product.status == 'inactive' %}opacity-60{% endif %}">
+      <td class="px-3 py-2">{{ product.name }}</td>
+      <td class="px-3 py-2">{{ product.product_type.name if product.product_type else '' }}</td>
+      <td class="px-3 py-2">{{ product.risk_level.name if product.risk_level else '' }}</td>
+      <td class="px-3 py-2">{{ product.launch_date or '-' }}</td>
+      <td class="px-3 py-2">
+        {% if product.status == 'active' %}
+        <span class="status-badge status-active">Active</span>
+        {% else %}
+        <span class="status-badge status-inactive">Inactive</span>
+        {% endif %}
+      </td>
+      <td class="px-3 py-2">{{ product.remark or '' }}</td>
+      <td class="px-3 py-2 text-right space-x-2">
+        {% if product.status == 'active' %}
+        <button
+          class="text-rose-500 hover:text-rose-700"
+          hx-post="/product_tracker/products/{{ product.id }}/status"
+          hx-vals='{"status": "inactive"}'
+          hx-target="#product-table"
+          hx-swap="outerHTML"
+          hx-confirm="确认逻辑删除该产品？"
+        >停用</button>
+        {% else %}
+        <button
+          class="text-emerald-500 hover:text-emerald-700"
+          hx-post="/product_tracker/products/{{ product.id }}/status"
+          hx-vals='{"status": "active"}'
+          hx-target="#product-table"
+          hx-swap="outerHTML"
+        >启用</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7" class="px-3 py-4 text-center text-slate-400">暂无产品</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

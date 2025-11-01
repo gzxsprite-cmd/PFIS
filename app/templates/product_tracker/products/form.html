@@ -1,0 +1,51 @@
+<div class="modal">
+  <div class="modal-overlay" hx-target="this" hx-swap="outerHTML"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">新增理财产品</h3>
+      <button class="modal-close" _="on click set #product-form-modal.innerHTML to ''">×</button>
+    </div>
+    <form
+      class="grid md:grid-cols-2 gap-4 text-sm"
+      hx-post="/product_tracker/products"
+      hx-target="#product-table"
+      hx-swap="outerHTML"
+      _="on htmx:afterRequest set #product-form-modal.innerHTML to ''"
+    >
+      <div class="md:col-span-2">
+        <label class="block text-slate-500 mb-1">产品名称</label>
+        <input type="text" name="name" class="input" required />
+      </div>
+      <div>
+        <label class="block text-slate-500 mb-1">产品类型</label>
+        <select name="type_id" class="input">
+          <option value="">---</option>
+          {% for item in master.product_types %}
+          <option value="{{ item.id }}">{{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-slate-500 mb-1">风险等级</label>
+        <select name="risk_level_id" class="input">
+          <option value="">---</option>
+          {% for item in master.risk_levels %}
+          <option value="{{ item.id }}">{{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-slate-500 mb-1">发行日期</label>
+        <input type="date" name="launch_date" class="input" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-slate-500 mb-1">备注</label>
+        <textarea name="remark" class="input" rows="2"></textarea>
+      </div>
+      <div class="md:col-span-2 flex justify-end gap-2">
+        <button type="button" class="btn-secondary" _="on click set #product-form-modal.innerHTML to ''">取消</button>
+        <button type="submit" class="btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>

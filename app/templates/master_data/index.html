@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}主数据维护 - PFIS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2 class="page-title">主数据维护</h2>
+  <p class="page-subtitle">所有维度数据支持逻辑删除与恢复，删除前请先查看影响分析。</p>
+</div>
+{% set dims = [
+  ('dim_account', '账户', master_data.accounts),
+  ('dim_category', '类别', master_data.categories),
+  ('dim_source_type', '来源类型', master_data.source_types),
+  ('dim_action_type', '动作类型', master_data.action_types),
+  ('dim_product_type', '产品类型', master_data.product_types),
+  ('dim_risk_level', '风险等级', master_data.risk_levels),
+  ('dim_metric', '指标类型', master_data.metrics),
+] %}
+<div class="space-y-6">
+  {% for table, title, items in dims %}
+  <section class="card space-y-4" id="section-{{ table }}">
+    <header class="flex items-center justify-between">
+      <div>
+        <h3 class="font-semibold text-slate-700">{{ title }}</h3>
+        <p class="text-xs text-slate-500">共 {{ items|length }} 条记录</p>
+      </div>
+      <form class="flex items-center gap-2" hx-post="/master_data" hx-target="#table-{{ table }}" hx-swap="outerHTML">
+        <input type="hidden" name="table" value="{{ table }}" />
+        <input type="text" name="name" class="input" placeholder="新增 {{ title }}" required />
+        <button type="submit" class="btn-primary">新增</button>
+      </form>
+    </header>
+    <div id="table-{{ table }}">
+      {% include "master_data/table.html" with table=table, items=items %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
