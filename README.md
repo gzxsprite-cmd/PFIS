@@ -1,74 +1,86 @@
 # Personal Finance & Investment System (PFIS)
 
-本仓库提供一个可本地运行的 Python + Streamlit 原型应用，实现个人理财与投资管理功能。项目基于 SQLite 存储数据，支持现金流记录、理财操作追踪、主数据维护、模拟分析以及 OCR 截图上传预留。
+PFIS 是一个基于 **FastAPI + HTMX + Tailwind 风格样式** 的个人理财管理系统，可在本地运行，支持现金流管理、理财操作追踪、产品指标维护、模拟收益实验以及图形化分析。项目默认使用 SQLite 数据库，无需额外依赖。
+
+## 🚀 快速开始
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 初始化数据库（可选，首次启动会自动执行）
+python -m app.db_init
+
+# 启动服务
+uvicorn app.main:app --reload --port 8000
+```
+
+访问 http://localhost:8000 即可打开仪表盘。
 
 ## 📁 项目结构
 
 ```
-finance_app/
-├── app.py                # Streamlit 主入口
-├── db_init.py            # 数据库初始化脚本
-├── db/
-│   └── finance.db        # SQLite 数据库（执行初始化脚本后生成）
-├── modules/              # 功能模块
-│   ├── cash_flow.py      # 收支记录
-│   ├── investment_log.py # 理财操作
-│   ├── product_tracker.py# 理财产品追踪
-│   ├── simulation_lab.py # 模拟分析
-│   ├── analytics.py      # 分析中心
-│   ├── master_data.py    # 主数据维护
-│   └── ocr_pending.py    # OCR 预留
-├── pending_ocr/          # OCR 截图存储目录
-│   ├── cashflow/
-│   ├── investment/
-│   └── products/
+app/
+├── main.py                # FastAPI 入口 & 路由注册
+├── db_init.py             # 初始化数据库及主数据
+├── database.py            # SQLAlchemy engine / Session 管理
+├── models.py              # ORM 模型定义
+├── schemas.py             # Pydantic 入参模型
+├── crud.py                # 数据访问封装
+├── routers/               # 功能模块路由
+│   ├── analytics.py
+│   ├── cash_flow.py
+│   ├── investment_log.py
+│   ├── master_data.py
+│   ├── ocr_pending.py
+│   ├── product_tracker.py
+│   └── simulation_lab.py
+├── templates/             # Jinja2 模板（支持 HTMX 局部刷新）
+│   ├── base.html
+│   ├── dashboard.html
+│   ├── analytics.html
+│   ├── simulation_lab.html
+│   ├── master_data.html
+│   ├── ocr_pending.html
+│   ├── settings.html
+│   ├── cash_flow/
+│   │   ├── list.html
+│   │   └── form.html
+│   ├── investment_log/
+│   │   ├── list.html
+│   │   └── form.html
+│   ├── product_tracker/
+│   │   ├── list.html
+│   │   └── detail.html
+│   └── partials/
+│       ├── simulation_result.html
+│       ├── master_data_table.html
+│       └── master_data_options.html
 ├── static/
-│   └── style.css         # 自定义样式
-└── data/
-    └── sample_import.csv # 示例 CSV
+│   ├── css/tailwind.css   # 精简 Tailwind 风格样式
+│   ├── js/plotly.min.js   # Plotly 异步加载器
+│   └── uploads/ocr_pending/  # OCR 上传占位目录
+└── __init__.py
+
+requirements.txt
 ```
 
-## 🚀 快速开始
+## ✨ 主要功能
 
-1. 安装依赖：
+- **仪表盘概览**：展示总收入、支出、投资及现金结余；快速导航各模块。
+- **收支记录**：通过 HTMX 动态加载表单及列表，支持上传凭证，自动登记 OCR 待处理。
+- **理财操作**：记录买入/赎回等动作，可选择同步生成现金流。
+- **产品追踪**：维护产品主档与指标，详情页使用 Plotly 展示收益曲线。
+- **模拟实验室**：输入产品和金额，动态返回收益预测卡片，可继续发起买入。
+- **分析中心**：聚合统计与月度净现金流柱状图。
+- **主数据维护**：账户、类别、来源、产品维度等均可即时新增；可供其他表单通过 HTMX 刷新选项。
+- **OCR 待处理**：展示所有上传凭证的占位信息，为后续识别功能打基础。
 
-   ```bash
-   pip install streamlit pandas plotly numpy
-   ```
+## 🛠️ 开发说明
 
-2. 初始化数据库：
+- 所有数据存储于 `db/finance.db`，如需重置可删除文件后重新运行 `python -m app.db_init`。
+- 模板中使用 HTMX (`hx-*` 属性) 完成局部刷新，同时集成 Hyperscript 提供未来扩展能力。
+- Plotly 通过自定义脚本异步加载，模板使用 `window.PFISPlotlyReady` 注册绘图回调。
+- 静态资源采用轻量化 Tailwind 风格工具类，可根据需求自行替换为完整 Tailwind 构建。
 
-   ```bash
-   cd finance_app
-   python db_init.py
-   ```
-
-3. 运行应用：
-
-   ```bash
-   streamlit run app.py
-   ```
-
-4. 在浏览器访问 `http://localhost:8501`，根据左侧导航使用各功能模块。
-
-## 🧩 关键特性
-
-- **主数据维护**：集中管理账户、分类、产品类型、风险等级等标准项，业务模块内支持“＋新增”快速写入。
-- **收支与理财联动**：理财操作可自动生成对应现金流，分析中心提供月度一致性校验提示。
-- **产品 1:N 指标**：理财产品主档配合时序指标记录，支持收益曲线可视化。
-- **模拟分析实验室**：基于历史指标估算预期收益与风险，确认后可直接生成买入操作并更新持仓。
-- **OCR 上传预留**：收支、理财、产品模块均提供截图上传，文件保存在 `pending_ocr/` 并记录至 `ocr_pending` 表，为未来识别功能留好接口。
-- **全离线运行**：所有数据均存储在本地 SQLite 数据库，无外部网络依赖。
-
-## 📦 数据导入导出
-
-- 各模块支持 CSV 数据导入（示例参见 `data/sample_import.csv`）。
-- 分析中心提供多表导出功能，一键生成 CSV 备份。
-
-## 📚 开发说明
-
-- 模块化设计，`modules/` 目录中的文件可独立扩展或替换。
-- 若需重置数据库，可在应用侧边栏进入“系统设置”，点击“重新初始化数据库”按钮。
-- OCR 功能目前仅保存截图，后续可在 `ocr_pending` 表基础上实现自动识别与填表。
-
-欢迎在此基础上继续扩展投资策略、自动化分析等高级能力。
+欢迎在此基础上扩展更多分析维度、自动化策略或接入真实 OCR 能力。祝使用愉快！
