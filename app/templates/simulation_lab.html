@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}模拟实验室{% endblock %}
+{% block content %}
+<section class="bg-white shadow rounded p-6">
+  <h2 class="text-lg font-semibold mb-4">收益模拟</h2>
+  <form
+    class="grid md:grid-cols-4 gap-4 text-sm"
+    hx-post="/simulation/calc"
+    hx-target="#simulation-result"
+    hx-swap="innerHTML"
+  >
+    <div class="md:col-span-2">
+      <label class="block text-slate-500 mb-1">产品</label>
+      <select name="product_id" class="input" required>
+        {% for product in products %}
+        <option value="{{ product.id }}">{{ product.product_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-slate-500 mb-1">投资金额 (¥)</label>
+      <input type="number" step="0.01" name="amount" class="input" required />
+    </div>
+    <div>
+      <label class="block text-slate-500 mb-1">持有天数</label>
+      <input type="number" name="expected_days" class="input" value="30" required />
+    </div>
+    <div class="md:col-span-4 flex justify-end">
+      <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">计算收益</button>
+    </div>
+  </form>
+  <div id="simulation-result" class="mt-6"></div>
+  <div id="simulation-next-step" class="mt-6"></div>
+</section>
+{% endblock %}
