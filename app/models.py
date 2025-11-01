@@ -89,9 +89,9 @@ class CashFlow(Base):
     source_type = relationship("DimSourceType", back_populates="cash_flows")
     investment = relationship(
         "InvestmentLog",
-        back_populates="cashflow_link",
-        uselist=False,
         foreign_keys=[link_investment_id],
+        uselist=False,
+        overlaps="cashflow_link",
     )
 
 
@@ -130,8 +130,9 @@ class InvestmentLog(Base):
     channel = relationship("DimAccount", back_populates="investment_logs")
     cashflow_link = relationship(
         "CashFlow",
-        back_populates="investment",
         foreign_keys=[cashflow_link_id],
+        uselist=False,
+        overlaps="investment",
     )
 
 
