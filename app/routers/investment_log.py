@@ -10,90 +10,72 @@ from sqlalchemy.orm import Session
 
 from .. import crud
 from ..database import get_db
-from ..schemas import CashFlowCreate, InvestmentLogCreate
+from ..schemas import InvestmentLogCreate
 
-router = APIRouter(prefix="/investment", tags=["Investment"])
+router = APIRouter(prefix="/investment", tags=["Investment Log"])
 templates = Jinja2Templates(directory="app/templates")
 
 
-@router.get("", response_class=HTMLResponse)
-async def investment_list(request: Request, db: Session = Depends(get_db)):
+def _render_table(request: Request, db: Session) -> HTMLResponse:
     investments = crud.list_investments(db)
-    master_data = crud.list_master_data(db)
-    products = crud.list_products(db)
     return templates.TemplateResponse(
-        "investment_log/list.html",
+        "investment_log/table.html",
+        {"request": request, "investments": investments},
+    )
+
+
+@router.get("", response_class=HTMLResponse)
+async def page(request: Request, db: Session = Depends(get_db)):
+    master_data = crud.list_master_data(db)
+    investments = crud.list_investments(db)
+    return templates.TemplateResponse(
+        "investment_log/index.html",
         {
             "request": request,
             "investments": investments,
             "master_data": master_data,
-            "products": products,
         },
     )
 
 
 @router.get("/form", response_class=HTMLResponse)
-async def investment_form(
-    request: Request, db: Session = Depends(get_db), target: Optional[str] = None
-):
+async def form(request: Request, db: Session = Depends(get_db)):
     master_data = crud.list_master_data(db)
     products = crud.list_products(db)
-    target_selector = f"#{target}" if target else "#investment-table"
     return templates.TemplateResponse(
         "investment_log/form.html",
         {
             "request": request,
             "master_data": master_data,
             "products": products,
-            "target_selector": target_selector,
         },
     )
 
 
-@router.post("/add", response_class=HTMLResponse)
-async def investment_add(
+@router.post("", response_class=HTMLResponse)
+async def create(
     request: Request,
     db: Session = Depends(get_db),
     date_value: str = Form(...),
-    product_id: str = Form(...),
-    action_id: str = Form(...),
-    amount: str = Form(...),
-    channel_id: Optional[str] = Form(default=None),
+    product_id: int = Form(...),
+    action_id: int = Form(...),
+    amount: float = Form(...),
+    channel_account_id: Optional[int] = Form(default=None),
     remark: Optional[str] = Form(default=None),
-    create_cashflow: Optional[str] = Form(default=None),
 ):
     payload = InvestmentLogCreate(
         date=date.fromisoformat(date_value),
-        product_id=int(product_id),
-        action_id=int(action_id),
-        amount=float(amount),
-        channel_id=int(channel_id) if channel_id else None,
+        product_id=product_id,
+        action_id=action_id,
+        amount=amount,
+        channel_account_id=channel_account_id,
         remark=remark or None,
     )
-    investment = crud.create_investment(db, payload)
+    crud.create_investment(db, payload)
+    return _render_table(request, db)
 
-    if create_cashflow:
-        flow_type = "支出"
-        action = investment.action.name if investment.action else ""
-        if action == "赎回":
-            flow_type = "收入"
-        cash_payload = CashFlowCreate(
-            date=payload.date,
-            account_id=payload.channel_id or 1,
-            category_id=None,
-            flow_type=flow_type,
-            amount=payload.amount,
-            source_type_id=None,
-            remark=f"来自理财操作#{investment.id}",
-            link_investment_id=investment.id,
-        )
-        crud.create_cash_flow(db, cash_payload)
 
-    investments = crud.list_investments(db)
-    return templates.TemplateResponse(
-        "investment_log/table.html",
-        {
-            "request": request,
-            "investments": investments,
-        },
-    )
+@router.delete("/{record_id}", response_class=HTMLResponse)
+async def delete_record(request: Request, record_id: int, db: Session = Depends(get_db)):
+    crud.soft_delete_investment(db, record_id)
+    return _render_table(request, db)

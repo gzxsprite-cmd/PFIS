@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}产品主数据 - PFIS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2 class="page-title">理财产品主数据</h2>
+  <p class="page-subtitle">维护产品类型、风险等级和状态，删除操作采用逻辑删除。</p>
+</div>
+<div class="card space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-sm text-slate-500">共有 {{ products|length }} 条产品记录。</p>
+    </div>
+    <button
+      class="btn-primary"
+      hx-get="/product_tracker/products/form"
+      hx-target="#product-form-modal"
+      hx-trigger="click"
+      hx-swap="innerHTML"
+    >新增产品</button>
+  </div>
+  <div id="product-table">
+    {% include "product_tracker/products/table.html" %}
+  </div>
+</div>
+<div id="product-form-modal"></div>
+{% endblock %}
