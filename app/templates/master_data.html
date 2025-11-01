@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}主数据维护{% endblock %}
+{% block content %}
+<section class="bg-white shadow rounded p-6 space-y-6 text-sm">
+  <h2 class="text-lg font-semibold">主数据维护</h2>
+  {% set configs = [
+    ('dim_account', '账户', master_data.accounts),
+    ('dim_category', '收支类别', master_data.categories),
+    ('dim_source_type', '来源类型', master_data.source_types),
+    ('dim_product_type', '产品类型', master_data.product_types),
+    ('dim_risk_level', '风险等级', master_data.risk_levels),
+    ('dim_action_type', '理财动作', master_data.action_types)
+  ] %}
+  {% for table, label, items in configs %}
+  <section class="border border-slate-200 rounded p-4">
+    <div class="flex items-center justify-between">
+      <h3 class="font-semibold text-slate-700">{{ label }}</h3>
+      <form
+        class="flex space-x-2"
+        hx-post="/master-data/add"
+        hx-target="#table-{{ table }}"
+        hx-swap="outerHTML"
+      >
+        <input type="hidden" name="table" value="{{ table }}" />
+        <input type="text" name="name" class="input" placeholder="新增{{ label }}" required />
+        <button class="px-3 py-1 bg-indigo-600 text-white rounded">保存</button>
+      </form>
+    </div>
+    {% include "partials/master_data_table.html" with table=table, items=items %}
+  </section>
+  {% endfor %}
+</section>
+{% endblock %}

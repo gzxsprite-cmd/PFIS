@@ -1,0 +1,30 @@
+<table class="min-w-full text-sm">
+  <thead class="bg-slate-100 text-slate-600">
+    <tr>
+      <th class="px-3 py-2 text-left">日期</th>
+      <th class="px-3 py-2 text-left">账户</th>
+      <th class="px-3 py-2 text-left">类别</th>
+      <th class="px-3 py-2 text-left">类型</th>
+      <th class="px-3 py-2 text-right">金额</th>
+      <th class="px-3 py-2 text-left">来源</th>
+      <th class="px-3 py-2 text-left">备注</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in cashflows %}
+    <tr class="border-b border-slate-200">
+      <td class="px-3 py-2">{{ item.date }}</td>
+      <td class="px-3 py-2">{{ item.account.name if item.account else '' }}</td>
+      <td class="px-3 py-2">{{ item.category.name if item.category else '' }}</td>
+      <td class="px-3 py-2">{{ item.flow_type }}</td>
+      <td class="px-3 py-2 text-right">{{ '%.2f'|format(item.amount) }}</td>
+      <td class="px-3 py-2">{{ item.source_type.name if item.source_type else '' }}</td>
+      <td class="px-3 py-2">{{ item.remark or '' }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7" class="px-3 py-4 text-center text-slate-400">暂无记录</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

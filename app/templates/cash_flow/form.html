@@ -1,0 +1,60 @@
+<form
+  class="grid md:grid-cols-3 gap-4 text-sm"
+  hx-post="/cashflow/add"
+  hx-target="#cashflow-table"
+  hx-swap="outerHTML"
+  hx-encoding="multipart/form-data"
+>
+  <div>
+    <label class="block text-slate-500 mb-1">日期</label>
+    <input type="date" name="date_value" class="input" required />
+  </div>
+  <div>
+    <label class="block text-slate-500 mb-1">账户</label>
+    <select name="account_id" class="input" required>
+      {% for account in master_data.accounts %}
+      <option value="{{ account.id }}">{{ account.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="block text-slate-500 mb-1">类别</label>
+    <select name="category_id" class="input">
+      <option value="">---</option>
+      {% for category in master_data.categories %}
+      <option value="{{ category.id }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="block text-slate-500 mb-1">收支类型</label>
+    <select name="flow_type" class="input" required>
+      <option value="收入">收入</option>
+      <option value="支出">支出</option>
+    </select>
+  </div>
+  <div>
+    <label class="block text-slate-500 mb-1">金额</label>
+    <input type="number" step="0.01" name="amount" class="input" required />
+  </div>
+  <div>
+    <label class="block text-slate-500 mb-1">来源</label>
+    <select name="source_type_id" class="input">
+      <option value="">---</option>
+      {% for source in master_data.source_types %}
+      <option value="{{ source.id }}">{{ source.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="md:col-span-2">
+    <label class="block text-slate-500 mb-1">备注</label>
+    <input type="text" name="remark" class="input" placeholder="可选" />
+  </div>
+  <div>
+    <label class="block text-slate-500 mb-1">上传凭证</label>
+    <input type="file" name="receipt" class="input" />
+  </div>
+  <div class="md:col-span-3 flex justify-end">
+    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">保存</button>
+  </div>
+</form>

@@ -1,0 +1,31 @@
+<table class="min-w-full text-sm">
+  <thead class="bg-slate-100 text-slate-600">
+    <tr>
+      <th class="px-3 py-2 text-left">名称</th>
+      <th class="px-3 py-2 text-left">类型</th>
+      <th class="px-3 py-2 text-left">风险</th>
+      <th class="px-3 py-2 text-left">上线</th>
+      <th class="px-3 py-2 text-left">状态</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products %}
+    <tr
+      class="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"
+      hx-get="/products/{{ product.id }}"
+      hx-target="#product-detail"
+      hx-swap="innerHTML"
+    >
+      <td class="px-3 py-2">{{ product.product_name }}</td>
+      <td class="px-3 py-2">{{ product.product_type.name if product.product_type else '' }}</td>
+      <td class="px-3 py-2">{{ product.risk_level.name if product.risk_level else '' }}</td>
+      <td class="px-3 py-2">{{ product.launch_date or '' }}</td>
+      <td class="px-3 py-2">{{ '启用' if product.is_active else '停用' }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="5" class="px-3 py-4 text-center text-slate-400">暂无产品，请先新增</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
