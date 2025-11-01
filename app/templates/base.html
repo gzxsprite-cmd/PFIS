@@ -4,29 +4,41 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}PFIS{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/tailwind.css" />
-    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
-    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
-    <script src="/static/js/plotly.min.js" defer></script>
+    <link rel="stylesheet" href="/static/css/tailwind.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.12" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0" defer></script>
   </head>
   <body class="bg-slate-100 min-h-screen text-slate-800">
-    <header class="bg-indigo-600 text-white shadow">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <h1 class="text-xl font-semibold">Personal Finance &amp; Investment System</h1>
-        <nav class="space-x-4 text-sm">
-          <a href="/" class="hover:underline">仪表盘</a>
-          <a href="/cashflow" class="hover:underline">收支记录</a>
-          <a href="/investment" class="hover:underline">理财操作</a>
-          <a href="/products" class="hover:underline">产品追踪</a>
-          <a href="/simulation" class="hover:underline">模拟实验室</a>
-          <a href="/analytics" class="hover:underline">分析中心</a>
-          <a href="/master-data" class="hover:underline">主数据</a>
-          <a href="/ocr" class="hover:underline">OCR 待处理</a>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar__brand">
+          <span class="sidebar__logo">PFIS</span>
+          <span class="sidebar__subtitle">Personal Finance</span>
+        </div>
+        <nav class="sidebar__nav">
+          <a href="/" class="sidebar__link">仪表盘</a>
+          <a href="/cashflow" class="sidebar__link">收支记录</a>
+          <a href="/investment" class="sidebar__link">理财操作</a>
+          <a href="/products" class="sidebar__link">产品追踪</a>
+          <a href="/simulation" class="sidebar__link">模拟实验室</a>
+          <a href="/analytics" class="sidebar__link">分析中心</a>
+          <a href="/master-data" class="sidebar__link">主数据维护</a>
+          <a href="/ocr" class="sidebar__link">OCR 待处理</a>
         </nav>
+        <div class="sidebar__footer">今日理财，从此刻开始</div>
+      </aside>
+      <div class="content">
+        <header class="topbar">
+          <h1 class="topbar__title">Personal Finance &amp; Investment System</h1>
+          <div class="topbar__meta">
+            <span class="topbar__badge">FastAPI + HTMX</span>
+          </div>
+        </header>
+        <main class="content__body">
+          {% block content %}{% endblock %}
+        </main>
       </div>
-    </header>
-    <main class="max-w-6xl mx-auto px-4 py-8">
-      {% block content %}{% endblock %}
-    </main>
+    </div>
   </body>
 </html>
