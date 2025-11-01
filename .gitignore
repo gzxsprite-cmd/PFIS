@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.DS_Store
+finance_app/db/finance.db
+finance_app/pending_ocr/*
+!finance_app/pending_ocr/.gitkeep
+!finance_app/pending_ocr/cashflow/.gitkeep
+!finance_app/pending_ocr/investment/.gitkeep
+!finance_app/pending_ocr/products/.gitkeep
+.streamlit/

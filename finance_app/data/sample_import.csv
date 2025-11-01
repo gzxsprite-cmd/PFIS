@@ -1,0 +1,3 @@
+date,account,category,flow_type,amount,source,remark
+2024-01-01,银行卡,工资收入,收入,12000,工资,一月薪资
+2024-01-05,银行卡,生活支出,支出,3000,其他,房租
