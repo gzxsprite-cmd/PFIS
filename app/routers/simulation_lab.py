@@ -36,8 +36,8 @@ async def simulation_calc(
     invest_amount = float(amount)
     days = int(expected_days)
     annual_yield = 0.035
-    if product and product.holdings:
-        annual_yield = max(product.holdings.avg_yield, 0.02)
+    if product and product.holding:
+        annual_yield = max(product.holding.avg_yield, 0.02)
     est_profit = invest_amount * annual_yield * days / 365
     context = {
         "request": request,

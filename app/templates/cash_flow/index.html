@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}收支记录 - PFIS{% endblock %}
+{% block content %}
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">收支记录</h1>
+    <p class="text-sm text-gray-500">通过 HTMX 快速登记每日收入与支出，实时刷新列表。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">收支列表</h2>
+        <p class="text-sm text-gray-500">所有新增、编辑与删除操作均通过 HTMX 弹窗完成。</p>
+      </div>
+      <button
+        type="button"
+        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+        hx-get="/cash_flow/add_form"
+        hx-target="#modal-container"
+        hx-swap="innerHTML"
+      >
+        新增记录
+      </button>
+    </div>
+    <div id="cashflow-table" class="overflow-x-auto">
+      {% include "cash_flow/list.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

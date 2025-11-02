@@ -1,33 +1,42 @@
 {% extends "base.html" %}
 {% block title %}OCR 待处理{% endblock %}
 {% block content %}
-<section class="bg-white shadow rounded p-6">
-  <h2 class="text-lg font-semibold mb-4">上传凭证待处理列表</h2>
-  <table class="min-w-full text-sm">
-    <thead class="bg-slate-100 text-slate-600">
-      <tr>
-        <th class="px-3 py-2 text-left">模块</th>
-        <th class="px-3 py-2 text-left">文件</th>
-        <th class="px-3 py-2 text-left">状态</th>
-        <th class="px-3 py-2 text-left">创建时间</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in items %}
-      <tr class="border-b border-slate-200">
-        <td class="px-3 py-2">{{ item.module }}</td>
-        <td class="px-3 py-2">
-          <a href="{{ item.image_path }}" class="text-indigo-600" target="_blank">查看</a>
-        </td>
-        <td class="px-3 py-2">{{ item.status }}</td>
-        <td class="px-3 py-2">{{ item.created_at }}</td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="4" class="px-3 py-4 text-center text-slate-400">暂无待处理记录</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">OCR 待处理</h1>
+    <p class="text-sm text-gray-500">查看待识别的上传凭证，支持预览原始文件。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-6 space-y-4">
+    <div class="space-y-1">
+      <h2 class="text-lg font-semibold text-gray-700">上传凭证待处理列表</h2>
+      <p class="text-sm text-gray-500">列表将显示待处理图片及其状态。</p>
+    </div>
+    <table class="min-w-full table-auto text-sm text-gray-700">
+      <thead class="bg-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500">
+        <tr>
+          <th class="px-4 py-3 text-left">模块</th>
+          <th class="px-4 py-3 text-left">文件</th>
+          <th class="px-4 py-3 text-left">状态</th>
+          <th class="px-4 py-3 text-left">创建时间</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for item in items %}
+        <tr class="transition hover:bg-blue-50/40">
+          <td class="px-4 py-3">{{ item.module }}</td>
+          <td class="px-4 py-3">
+            <a href="{{ item.image_path }}" class="text-blue-600 hover:text-blue-700" target="_blank">查看</a>
+          </td>
+          <td class="px-4 py-3">{{ item.status }}</td>
+          <td class="px-4 py-3">{{ item.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-gray-400">暂无待处理记录</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}

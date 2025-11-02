@@ -1,29 +1,116 @@
 {% extends "base.html" %}
 {% block title %}PFIS 仪表盘{% endblock %}
 {% block content %}
-<section class="grid md:grid-cols-3 gap-4">
-  <div class="card">
-    <p class="text-sm text-slate-500">总收入</p>
-    <p class="text-2xl font-semibold text-emerald-600">¥{{ '%.2f'|format(summary.total_income) }}</p>
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">仪表盘总览</h1>
+    <p class="text-sm text-gray-500">快速洞察当前资产状况与现金流趋势。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-1">
+      <h2 class="text-lg font-semibold text-gray-800">数据导入 / 导出</h2>
+      <p class="text-sm text-gray-500">导出完整数据备份，或从 Excel 模板快速恢复。</p>
+    </div>
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <a
+        href="/data/export"
+        target="_blank"
+        class="rounded-lg bg-blue-600 px-5 py-2 text-center text-sm font-medium text-white transition hover:bg-blue-700"
+      >
+        导出数据
+      </a>
+      <button
+        type="button"
+        hx-get="/data/import_form"
+        hx-target="#modal-container"
+        hx-swap="innerHTML"
+        class="rounded-lg bg-green-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+      >
+        导入数据
+      </button>
+    </div>
   </div>
-  <div class="card">
-    <p class="text-sm text-slate-500">总支出</p>
-    <p class="text-2xl font-semibold text-rose-600">¥{{ '%.2f'|format(summary.total_expense) }}</p>
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
+      <p class="text-sm text-gray-500">总收入</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_income) }}</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
+      <p class="text-sm text-gray-500">总支出</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_expense) }}</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
+      <p class="text-sm text-gray-500">投资金额</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
+      <p class="text-sm text-gray-500">净现金流</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.net_cash) }}</p>
+    </div>
   </div>
-  <div class="card">
-    <p class="text-sm text-slate-500">投资金额</p>
-    <p class="text-2xl font-semibold text-indigo-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
+  <div class="grid grid-cols-1 gap-8 xl:grid-cols-3">
+    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6 xl:col-span-2">
+      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-xl font-semibold text-gray-800">月度净现金流</h2>
+          <p class="text-sm text-gray-500">以月度维度观察净现金流变化趋势。</p>
+        </div>
+        <span class="self-start rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">人民币</span>
+      </div>
+      <div id="dashboard-cashflow" class="h-72"></div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">快捷操作</h2>
+        <p class="text-sm text-gray-500">快速跳转至常用功能模块。</p>
+      </div>
+      <div class="space-y-3 text-sm">
+        <a href="/cash_flow" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>记录今日收支</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/investment" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>新增理财交易</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/product_tracker/products" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>维护理财产品</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/simulation" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>进行收益模拟</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/analytics" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>查看分析报告</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/master_data" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>维护主数据</span>
+          <span class="text-blue-500">→</span>
+        </a>
+      </div>
+    </div>
   </div>
 </section>
-<section class="mt-8 bg-white shadow rounded p-6">
-  <h2 class="text-lg font-semibold mb-4">开始你的操作</h2>
-  <div class="grid md:grid-cols-3 gap-4 text-sm">
-    <a href="/cashflow" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">记录今日收支</a>
-    <a href="/investment" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">新增理财交易</a>
-    <a href="/products" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">维护理财产品</a>
-    <a href="/simulation" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">进行收益模拟</a>
-    <a href="/analytics" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">查看分析报告</a>
-    <a href="/master-data" class="p-4 border border-slate-200 rounded hover:border-indigo-400 hover:bg-slate-50">维护主数据</a>
-  </div>
-</section>
+<script>
+  window.PFISPlotlyReady(function () {
+    const data = {{ monthly | tojson }};
+    const trace = {
+      x: data.map((row) => row[0]),
+      y: data.map((row) => row[1]),
+      type: 'scatter',
+      fill: 'tozeroy',
+      line: { color: '#2563eb', width: 3 },
+      marker: { size: 6 },
+    };
+    const layout = {
+      margin: { t: 24, r: 16, b: 40, l: 48 },
+      template: 'plotly_white',
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: 'transparent',
+    };
+    Plotly.newPlot('dashboard-cashflow', [trace], layout, { displayModeBar: false, responsive: true });
+  });
+</script>
 {% endblock %}

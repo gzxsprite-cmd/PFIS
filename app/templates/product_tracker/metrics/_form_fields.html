@@ -1,0 +1,66 @@
+{% set current = record if record is defined else None %}
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">产品</label>
+    <select
+      name="product_id"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      required
+    >
+      {% for product in products %}
+      <option value="{{ product.id }}" {% if current and current.product_id == product.id %}selected{% endif %}>{{ product.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">指标</label>
+    <select
+      name="metric_id"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      required
+    >
+      {% for metric in metrics %}
+      <option value="{{ metric.id }}" {% if current and current.metric_id == metric.id %}selected{% endif %}>{{ metric.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">记录日期</label>
+    <input
+      type="date"
+      name="record_date"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      value="{{ current.record_date.isoformat() if current and current.record_date else '' }}"
+      required
+    />
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">数值</label>
+    <input
+      type="number"
+      step="0.0001"
+      name="value"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      value="{{ '%.4f'|format(current.value) if current else '' }}"
+      required
+    />
+  </div>
+  <div class="space-y-2 md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700">来源</label>
+    <input
+      type="text"
+      name="source"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      value="{{ current.source if current and current.source else '' }}"
+      placeholder="可选"
+    />
+  </div>
+  <div class="space-y-2 md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700">备注</label>
+    <textarea
+      name="remark"
+      rows="2"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+    >{{ current.remark if current and current.remark else '' }}</textarea>
+  </div>
+</div>

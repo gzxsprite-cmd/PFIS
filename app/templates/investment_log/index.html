@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}理财操作 - PFIS{% endblock %}
+{% block content %}
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">理财操作</h1>
+    <p class="text-sm text-gray-500">记录买入、赎回、分红等投资动作，与账户维度联动管理。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">理财操作记录</h2>
+        <p class="text-sm text-gray-500">通过弹窗快速登记买入、赎回等动作，支持主数据即时补充。</p>
+      </div>
+      <button
+        type="button"
+        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+        hx-get="/investment/add_form"
+        hx-target="#modal-container"
+        hx-swap="innerHTML"
+      >
+        新增操作
+      </button>
+    </div>
+    <div id="investment-table" class="overflow-x-auto">
+      {% include "investment_log/list.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

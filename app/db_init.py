@@ -13,6 +13,8 @@ MASTER_DEFAULTS = {
     models.DimRiskLevel: ["低", "中", "高"],
     models.DimActionType: ["买入", "赎回", "分红"],
     models.DimSourceType: ["工资", "理财", "其他"],
+    models.DimMetric: ["净值", "收益率", "波动率"],
+    models.DimInvestmentTerm: ["T+1", "T+7", "30天", "90天"],
 }
 
 

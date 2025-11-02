@@ -6,3 +6,4 @@ pandas>=2.2
 plotly>=5.23
 python-multipart>=0.0.9
 aiofiles>=23.2
+openpyxl>=3.1

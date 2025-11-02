@@ -1,0 +1,24 @@
+<div class="space-y-4">
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">名称</label>
+    <input
+      type="text"
+      name="name"
+      value="{{ item.name }}"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      required
+    />
+  </div>
+  {% if item.status is defined %}
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">状态</label>
+    <select
+      name="status"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+    >
+      <option value="active" {% if item.status == 'active' %}selected{% endif %}>启用</option>
+      <option value="inactive" {% if item.status == 'inactive' %}selected{% endif %}>停用</option>
+    </select>
+  </div>
+  {% endif %}
+</div>

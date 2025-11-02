@@ -1,28 +1,37 @@
 {% extends "base.html" %}
 {% block title %}分析中心{% endblock %}
 {% block content %}
-<section class="bg-white shadow rounded p-6 space-y-6">
-  <div class="grid md:grid-cols-4 gap-4 text-sm">
-    <div class="stat-card">
-      <p>总收入</p>
-      <h3>¥{{ '%.2f'|format(summary.total_income) }}</h3>
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">分析中心</h1>
+    <p class="text-sm text-gray-500">查看全局趋势、收益对比与收支结构的综合图表。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4 text-sm">
+      <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-1">
+        <p class="text-xs text-gray-500">总收入</p>
+        <p class="text-xl font-semibold text-blue-600">¥{{ '%.2f'|format(summary.total_income) }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-1">
+        <p class="text-xs text-gray-500">总支出</p>
+        <p class="text-xl font-semibold text-blue-600">¥{{ '%.2f'|format(summary.total_expense) }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-1">
+        <p class="text-xs text-gray-500">投资金额</p>
+        <p class="text-xl font-semibold text-blue-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-1">
+        <p class="text-xs text-gray-500">现金结余</p>
+        <p class="text-xl font-semibold text-blue-600">¥{{ '%.2f'|format(summary.net_cash) }}</p>
+      </div>
     </div>
-    <div class="stat-card">
-      <p>总支出</p>
-      <h3>¥{{ '%.2f'|format(summary.total_expense) }}</h3>
+    <div class="space-y-3">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">月度净现金流</h2>
+        <p class="text-sm text-gray-500">按月对比整体现金盈亏趋势。</p>
+      </div>
+      <div id="analytics-chart" class="h-80"></div>
     </div>
-    <div class="stat-card">
-      <p>投资金额</p>
-      <h3>¥{{ '%.2f'|format(summary.total_invested) }}</h3>
-    </div>
-    <div class="stat-card">
-      <p>现金结余</p>
-      <h3>¥{{ '%.2f'|format(summary.net_cash) }}</h3>
-    </div>
-  </div>
-  <div>
-    <h2 class="text-lg font-semibold mb-3">月度净现金流</h2>
-    <div id="analytics-chart" class="h-80"></div>
   </div>
 </section>
 <script>

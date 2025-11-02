@@ -1,0 +1,27 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 backdrop-blur-sm px-4">
+  <div class="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl space-y-6">
+    <div class="space-y-2">
+      <h3 class="text-lg font-semibold text-gray-800">导入结果</h3>
+      <p class="text-sm text-gray-500">以下为各数据表的处理状态。</p>
+    </div>
+    <div class="space-y-3 text-sm">
+      <ul class="space-y-2">
+        {% for sheet, message in summary.items() %}
+        <li class="flex items-start justify-between gap-3 rounded-xl bg-gray-50 px-4 py-2">
+          <span class="font-medium text-gray-700">{{ sheet }}</span>
+          <span class="text-gray-600">{{ message }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="flex justify-end gap-3 pt-2 text-sm">
+      <button
+        type="button"
+        class="rounded-lg bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700"
+        _="on click window.PFIS.closeModal()"
+      >
+        关闭
+      </button>
+    </div>
+  </div>
+</div>

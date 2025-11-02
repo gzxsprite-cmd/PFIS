@@ -1,0 +1,69 @@
+<table class="min-w-full table-auto text-sm text-gray-700">
+  <thead class="bg-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500">
+    <tr>
+      <th class="px-4 py-3 text-left">名称</th>
+      <th class="px-4 py-3 text-left">状态</th>
+      <th class="px-4 py-3 text-right">操作</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-100">
+    {% for item in items %}
+    <tr
+      id="master-row-{{ table }}-{{ item.id }}"
+      class="transition hover:bg-blue-50/40 {{ 'opacity-60' if item.status == 'inactive' else '' }}"
+    >
+      <td class="px-4 py-3">{{ item.name }}</td>
+      <td class="px-4 py-3">
+        {% if item.status == 'active' %}
+        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-600">启用</span>
+        {% else %}
+        <span class="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-600">停用</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-3 text-right">
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="text-sm font-medium text-blue-600 transition hover:text-blue-700"
+            hx-get="/master_data/{{ table }}/{{ item.id }}/edit"
+            hx-target="#modal-container"
+            hx-swap="innerHTML"
+          >
+            编辑
+          </button>
+          {% if item.status == 'active' %}
+          <button
+            type="button"
+            class="text-sm font-medium text-rose-500 transition hover:text-rose-600"
+            hx-post="/master_data/{{ table }}/{{ item.id }}/delete"
+            hx-target="#table-{{ table }}"
+            hx-swap="innerHTML"
+            hx-trigger="confirmed"
+            data-confirm="确认逻辑删除【{{ item.name }}】？如有关联数据将受影响。"
+            data-impact-url="/master_data/impact/{{ table }}/{{ item.id }}"
+            onclick="window.PFIS.confirmAction(this)"
+          >
+            删除
+          </button>
+          {% else %}
+          <button
+            type="button"
+            class="text-sm font-medium text-emerald-600 transition hover:text-emerald-700"
+            hx-post="/master_data/{{ table }}/{{ item.id }}/status"
+            hx-vals='{"status": "active"}'
+            hx-target="#table-{{ table }}"
+            hx-swap="innerHTML"
+          >
+            启用
+          </button>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="3" class="px-4 py-6 text-center text-gray-400">暂无数据</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -9,36 +9,280 @@
     <script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0" defer></script>
   </head>
-  <body class="bg-slate-100 min-h-screen text-slate-800">
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="sidebar__brand">
-          <span class="sidebar__logo">PFIS</span>
-          <span class="sidebar__subtitle">Personal Finance</span>
-        </div>
-        <nav class="sidebar__nav">
-          <a href="/" class="sidebar__link">仪表盘</a>
-          <a href="/cashflow" class="sidebar__link">收支记录</a>
-          <a href="/investment" class="sidebar__link">理财操作</a>
-          <a href="/products" class="sidebar__link">产品追踪</a>
-          <a href="/simulation" class="sidebar__link">模拟实验室</a>
-          <a href="/analytics" class="sidebar__link">分析中心</a>
-          <a href="/master-data" class="sidebar__link">主数据维护</a>
-          <a href="/ocr" class="sidebar__link">OCR 待处理</a>
-        </nav>
-        <div class="sidebar__footer">今日理财，从此刻开始</div>
-      </aside>
-      <div class="content">
-        <header class="topbar">
-          <h1 class="topbar__title">Personal Finance &amp; Investment System</h1>
-          <div class="topbar__meta">
-            <span class="topbar__badge">FastAPI + HTMX</span>
+  <body
+    class="bg-gray-100 text-gray-800 min-h-screen antialiased"
+    _="on htmx:afterOnLoad call window.PFIS.handleHtmx(event)"
+  >
+    {% set nav_items = [
+      {"label": "仪表盘", "href": "/", "icon": "🏠"},
+      {"label": "收支记录", "href": "/cash_flow", "icon": "💰"},
+      {"label": "理财操作", "href": "/investment", "icon": "📈"},
+      {"label": "产品追踪", "href": "/product_tracker/products", "icon": "📦"},
+      {"label": "模拟实验室", "href": "/simulation", "icon": "🧪"},
+      {"label": "分析中心", "href": "/analytics", "icon": "📊"},
+      {"label": "主数据维护", "href": "/master_data", "icon": "🗂"},
+      {"label": "OCR 待处理", "href": "/ocr", "icon": "🖼"},
+    ] %}
+    <div class="flex min-h-screen">
+      <aside
+        class="hidden md:flex w-64 flex-col justify-between bg-gray-900 text-gray-100 px-6 py-8 sticky top-0 max-h-screen"
+      >
+        <div class="space-y-8">
+          <div class="flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 text-2xl">⚡</div>
+            <div>
+              <p class="text-lg font-semibold">PFIS</p>
+              <p class="text-xs text-blue-100/70 tracking-[0.2em]">Finance System</p>
+            </div>
           </div>
-        </header>
-        <main class="content__body">
-          {% block content %}{% endblock %}
+          <nav class="space-y-2 text-sm font-medium">
+            {% for item in nav_items %}
+            {% set is_active = request.url.path == item.href or (item.href != '/' and request.url.path.startswith(item.href)) %}
+            <a
+              href="{{ item.href }}"
+              class="flex items-center gap-3 rounded-lg px-4 py-2.5 transition {{ 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' if is_active else 'text-gray-300 hover:bg-gray-800 hover:text-white' }}"
+            >
+              <span class="text-lg">{{ item.icon }}</span>
+              <span>{{ item.label }}</span>
+            </a>
+            {% endfor %}
+          </nav>
+        </div>
+        <footer class="text-xs text-gray-500/80 border-t border-gray-800 pt-6">
+          © PFIS 2025
+        </footer>
+      </aside>
+      <div class="flex-1 flex flex-col">
+        <div class="md:hidden bg-gray-900 text-gray-100 shadow-md">
+          <div class="container mx-auto flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-3">
+              <span class="text-lg font-semibold">PFIS</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+              FastAPI + HTMX
+            </div>
+          </div>
+          <nav class="border-t border-blue-900/40 px-6 py-3 text-sm">
+            <div class="flex flex-wrap gap-2">
+              {% for item in nav_items %}
+              {% set is_active = request.url.path == item.href or (item.href != '/' and request.url.path.startswith(item.href)) %}
+              <a
+                href="{{ item.href }}"
+                class="rounded-full px-3 py-1.5 {{ 'bg-blue-600 text-white' if is_active else 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white' }}"
+              >
+                {{ item.label }}
+              </a>
+              {% endfor %}
+            </div>
+          </nav>
+        </div>
+        <main class="flex-1 px-10 py-8 bg-gray-50 min-h-screen md:rounded-l-3xl">
+          <div class="max-w-6xl mx-auto space-y-8">
+            {% block content %}{% endblock %}
+          </div>
         </main>
+        <footer class="border-t border-gray-200 bg-white/80">
+          <div class="container mx-auto max-w-6xl px-6 py-4 text-center text-xs text-gray-500">
+            © PFIS 2025 – Personal Finance &amp; Investment System
+          </div>
+        </footer>
       </div>
     </div>
+
+    <div
+      id="pfis-toast"
+      class="fixed bottom-6 right-6 z-50 hidden rounded-xl bg-gray-900/90 px-4 py-3 text-sm font-medium text-white shadow-lg"
+    ></div>
+
+    <div
+      id="pfis-modal"
+      class="fixed inset-0 z-40 hidden items-center justify-center bg-gray-900/70 backdrop-blur-sm px-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl space-y-6">
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold text-gray-800">操作确认</h3>
+          <p id="pfis-modal-message" class="text-sm text-gray-600"></p>
+        </div>
+        <div class="flex justify-end gap-3 pt-2 text-sm">
+          <button
+            type="button"
+            class="rounded-lg bg-gray-100 px-4 py-2 text-gray-800 transition hover:bg-gray-200"
+            data-modal-action="cancel"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+            data-modal-action="confirm"
+          >
+            确认
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-container" class="z-50"></div>
+
+    <script>
+      window.PFIS = window.PFIS || {};
+      (function () {
+        const toastEl = document.getElementById('pfis-toast');
+        const modalEl = document.getElementById('pfis-modal');
+        const modalMessageEl = document.getElementById('pfis-modal-message');
+        const cancelBtn = modalEl.querySelector('[data-modal-action="cancel"]');
+        const confirmBtn = modalEl.querySelector('[data-modal-action="confirm"]');
+        const modalContainer = document.getElementById('modal-container');
+        let toastTimeout;
+        let pendingAction = null;
+
+        window.PFIS.showToast = function (message) {
+          if (!toastEl) return;
+          toastEl.textContent = message || '操作完成';
+          toastEl.classList.remove('hidden', 'opacity-0', 'translate-y-4');
+          toastEl.classList.add('opacity-100');
+          clearTimeout(toastTimeout);
+          toastTimeout = window.setTimeout(() => {
+            toastEl.classList.add('hidden');
+          }, 2000);
+        };
+
+        window.PFIS.confirmAction = function (element) {
+          if (!modalEl) return;
+          pendingAction = element;
+          const defaultMessage = element?.dataset?.confirm || '确定执行此操作吗？';
+          const impactUrl = element?.dataset?.impactUrl;
+
+          const renderMessage = (message) => {
+            modalMessageEl.innerHTML = message;
+            modalEl.classList.remove('hidden');
+            modalEl.classList.add('flex');
+          };
+
+          renderMessage(defaultMessage);
+
+          if (impactUrl) {
+            fetch(impactUrl)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data && Array.isArray(data.impact) && data.impact.length) {
+                  const detail = data.impact
+                    .map((item) => `${item.table}(${item.count})`)
+                    .join('、');
+                  renderMessage(
+                    `${defaultMessage}<br /><span class="mt-2 block text-xs text-gray-500">关联影响：${detail}</span>`
+                  );
+                }
+              })
+              .catch(() => {
+                renderMessage(defaultMessage);
+              });
+          }
+        };
+
+        window.PFIS.handleHtmx = function (event) {
+          const xhr = event?.detail?.xhr;
+          const config = event?.detail?.requestConfig;
+          const decodeHeader = (value) => {
+            if (!value) return value;
+            try {
+              return decodeURIComponent(value);
+            } catch (err) {
+              return value;
+            }
+          };
+
+          const headerMessageRaw =
+            xhr?.getResponseHeader?.('HX-Toast') ||
+            xhr?.getResponseHeader?.('X-Toast') ||
+            xhr?.getResponseHeader?.('X-Message');
+          const headerMessage = decodeHeader(headerMessageRaw);
+
+          if (headerMessage) {
+            window.PFIS.showToast(headerMessage);
+            return;
+          }
+
+          const verb = config?.verb?.toUpperCase?.();
+          if (verb && verb !== 'GET') {
+            window.PFIS.showToast('操作完成');
+          }
+        };
+
+        const closeModal = () => {
+          modalEl.classList.add('hidden');
+          modalEl.classList.remove('flex');
+        };
+
+        cancelBtn?.addEventListener('click', () => {
+          pendingAction = null;
+          closeModal();
+        });
+
+        confirmBtn?.addEventListener('click', () => {
+          if (pendingAction) {
+            htmx.trigger(pendingAction, 'confirmed');
+            pendingAction = null;
+          }
+          closeModal();
+        });
+
+        modalEl?.addEventListener('click', (event) => {
+          if (event.target === modalEl) {
+            pendingAction = null;
+            closeModal();
+          }
+        });
+
+        window.PFIS.switchMasterTab = function (tabId) {
+          const buttons = document.querySelectorAll('[data-master-tab]');
+          const panels = document.querySelectorAll('[data-master-panel]');
+          buttons.forEach((btn) => {
+            const active = btn.dataset.masterTab === tabId;
+            btn.classList.toggle('bg-blue-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('border-blue-600', active);
+            btn.classList.toggle('bg-white', !active);
+            btn.classList.toggle('text-gray-600', !active);
+          });
+          panels.forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.masterPanel !== tabId);
+          });
+        };
+
+        window.PFIS.closeModal = function () {
+          if (modalContainer) {
+            modalContainer.innerHTML = '';
+          }
+          document.body.classList.remove('overflow-hidden');
+        };
+
+        document.addEventListener('click', (event) => {
+          if (event.target.matches('[data-modal-dismiss]')) {
+            window.PFIS.closeModal();
+          }
+        });
+
+        window.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && modalContainer && modalContainer.innerHTML.trim()) {
+            window.PFIS.closeModal();
+          }
+        });
+
+        document.body.addEventListener('htmx:afterSwap', (event) => {
+          if (event.target === modalContainer && modalContainer.innerHTML.trim()) {
+            document.body.classList.add('overflow-hidden');
+          }
+        });
+
+        document.body.addEventListener('htmx:afterSettle', (event) => {
+          if (event.target === modalContainer && !modalContainer.innerHTML.trim()) {
+            document.body.classList.remove('overflow-hidden');
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

@@ -1,0 +1,14 @@
+<select
+  id="{{ field_id }}"
+  name="{{ field_name }}"
+  class="{{ select_classes }}"
+>
+  {% if include_blank %}
+  <option value="">{{ blank_label }}</option>
+  {% endif %}
+  {% for option in items %}
+  <option value="{{ option.id }}" {% if selected_id and selected_id == option.id %}selected{% endif %}>
+    {{ option.name }}
+  </option>
+  {% endfor %}
+</select>

@@ -1,19 +1,22 @@
-{% extends "base.html" %}
-{% block title %}理财操作{% endblock %}
-{% block content %}
-<section class="bg-white shadow rounded p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg font-semibold">理财操作</h2>
-    <button
-      class="px-3 py-1 rounded bg-indigo-600 text-white text-sm"
-      hx-get="/investment/form"
-      hx-target="#investment-form"
-      hx-swap="innerHTML"
-    >新增操作</button>
-  </div>
-  <div id="investment-form" class="mb-6"></div>
-  <div id="investment-table">
-    {% include "investment_log/table.html" %}
-  </div>
-</section>
-{% endblock %}
+<table class="min-w-full table-auto text-sm text-left text-gray-700">
+  <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <tr>
+      <th class="px-4 py-3">日期</th>
+      <th class="px-4 py-3">产品</th>
+      <th class="px-4 py-3">动作</th>
+      <th class="px-4 py-3 text-right">金额</th>
+      <th class="px-4 py-3">资金渠道</th>
+      <th class="px-4 py-3">备注</th>
+      <th class="px-4 py-3 text-right">操作</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-100">
+    {% for item in investments %}
+    {% include "investment_log/row.html" %}
+    {% else %}
+    <tr>
+      <td colspan="7" class="px-4 py-6 text-center text-gray-400">暂无记录</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,19 +1,23 @@
-{% extends "base.html" %}
-{% block title %}收支记录{% endblock %}
-{% block content %}
-<section class="bg-white shadow rounded p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg font-semibold">现金流记录</h2>
-    <button
-      class="px-3 py-1 rounded bg-indigo-600 text-white text-sm"
-      hx-get="/cashflow/form"
-      hx-target="#cashflow-form"
-      hx-swap="innerHTML"
-    >新增记录</button>
-  </div>
-  <div id="cashflow-form" class="mb-6"></div>
-  <div id="cashflow-table">
-    {% include "cash_flow/table.html" %}
-  </div>
-</section>
-{% endblock %}
+<table class="min-w-full table-auto text-sm text-left text-gray-700">
+  <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <tr>
+      <th class="px-4 py-3">日期</th>
+      <th class="px-4 py-3">账户</th>
+      <th class="px-4 py-3">类别</th>
+      <th class="px-4 py-3">类型</th>
+      <th class="px-4 py-3 text-right">金额</th>
+      <th class="px-4 py-3">来源</th>
+      <th class="px-4 py-3">备注</th>
+      <th class="px-4 py-3 text-right">操作</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-100">
+    {% for item in cashflows %}
+    {% include "cash_flow/row.html" %}
+    {% else %}
+    <tr>
+      <td colspan="8" class="px-4 py-6 text-center text-gray-400">暂无记录</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

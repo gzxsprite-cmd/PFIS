@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 *.DS_Store
 finance_app/db/finance.db
+db/
 finance_app/pending_ocr/*
 !finance_app/pending_ocr/.gitkeep
 !finance_app/pending_ocr/cashflow/.gitkeep

@@ -1,0 +1,17 @@
+<tr id="metric-row-{{ record.id }}" class="transition hover:bg-blue-50/40">
+  <td class="px-4 py-3">{{ record.record_date }}</td>
+  <td class="px-4 py-3 text-right font-semibold text-blue-600">{{ '%.4f'|format(record.value) }}</td>
+  <td class="px-4 py-3">{{ record.source or '' }}</td>
+  <td class="px-4 py-3">{{ record.remark or '' }}</td>
+  <td class="px-4 py-3 text-right">
+    <button
+      type="button"
+      class="text-sm font-medium text-blue-600 transition hover:text-blue-700"
+      hx-get="/product_tracker/metrics/edit/{{ record.id }}"
+      hx-target="#modal-container"
+      hx-swap="innerHTML"
+    >
+      编辑
+    </button>
+  </td>
+</tr>
