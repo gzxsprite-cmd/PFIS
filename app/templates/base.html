@@ -4,38 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}PFIS{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/tailwind.min.css') }}" />
-    <script>
-      window.tailwind = window.tailwind || {};
-      window.tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              pfis: {
-                navy: '#0f172a',
-              },
-            },
-          },
-        },
-      };
-      (function () {
-        const cdnSources = [
-          'https://cdn.tailwindcss.com?plugins=forms,typography',
-          'https://cdn.staticfile.org/tailwindcss/3.3.3/tailwind.min.js',
-          'https://fastly.jsdelivr.net/npm/tailwindcss@3.3.3/lib/index.js',
-        ];
-        const loadScript = (index) => {
-          if (index >= cdnSources.length) {
-            return;
-          }
-          const script = document.createElement('script');
-          script.src = cdnSources[index];
-          script.onerror = () => loadScript(index + 1);
-          document.head.appendChild(script);
-        };
-        loadScript(0);
-      })();
-    </script>
+    <link rel="stylesheet" href="/static/css/tailwind.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0" defer></script>
@@ -44,9 +13,6 @@
     class="bg-gray-100 text-gray-800 min-h-screen antialiased"
     _="on htmx:afterOnLoad call window.PFIS.handleHtmx(event)"
   >
-    <div class="bg-blue-600 text-white p-2 text-center text-sm font-medium tracking-wide">
-      Tailwind 加载测试
-    </div>
     {% set nav_items = [
       {"label": "仪表盘", "href": "/", "icon": "🏠"},
       {"label": "收支记录", "href": "/cash_flow", "icon": "💰"},
@@ -59,7 +25,7 @@
     ] %}
     <div class="flex min-h-screen">
       <aside
-        class="hidden md:flex w-64 flex-col justify-between bg-pfis-navy text-slate-100 px-6 py-8 sticky top-0 max-h-screen"
+        class="hidden md:flex w-64 flex-col justify-between bg-gray-900 text-gray-100 px-6 py-8 sticky top-0 max-h-screen"
       >
         <div class="space-y-8">
           <div class="flex items-center gap-3">
@@ -69,12 +35,12 @@
               <p class="text-xs text-blue-100/70 tracking-[0.2em]">Finance System</p>
             </div>
           </div>
-          <nav class="space-y-1 text-sm font-medium">
+          <nav class="space-y-2 text-sm font-medium">
             {% for item in nav_items %}
             {% set is_active = request.url.path == item.href or (item.href != '/' and request.url.path.startswith(item.href)) %}
             <a
               href="{{ item.href }}"
-              class="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 {{ 'bg-blue-600 text-white shadow-lg shadow-blue-800/30' if is_active else 'text-blue-100/80 hover:bg-blue-500/20 hover:text-white' }}"
+              class="flex items-center gap-3 rounded-lg px-4 py-2.5 transition {{ 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' if is_active else 'text-gray-300 hover:bg-gray-800 hover:text-white' }}"
             >
               <span class="text-lg">{{ item.icon }}</span>
               <span>{{ item.label }}</span>
@@ -82,10 +48,12 @@
             {% endfor %}
           </nav>
         </div>
-        <p class="text-xs text-blue-100/60">今日理财，从此刻开始</p>
+        <footer class="text-xs text-gray-500/80 border-t border-gray-800 pt-6">
+          © PFIS 2025
+        </footer>
       </aside>
       <div class="flex-1 flex flex-col">
-        <div class="md:hidden bg-pfis-navy text-slate-100 shadow-md">
+        <div class="md:hidden bg-gray-900 text-gray-100 shadow-md">
           <div class="container mx-auto flex items-center justify-between px-6 py-4">
             <div class="flex items-center gap-3">
               <span class="text-lg font-semibold">PFIS</span>
@@ -100,7 +68,7 @@
               {% set is_active = request.url.path == item.href or (item.href != '/' and request.url.path.startswith(item.href)) %}
               <a
                 href="{{ item.href }}"
-                class="rounded-full px-3 py-1.5 {{ 'bg-blue-600 text-white' if is_active else 'bg-blue-500/10 text-blue-100 hover:bg-blue-500/20' }}"
+                class="rounded-full px-3 py-1.5 {{ 'bg-blue-600 text-white' if is_active else 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white' }}"
               >
                 {{ item.label }}
               </a>
