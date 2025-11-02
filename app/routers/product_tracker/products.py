@@ -76,6 +76,55 @@ async def create_product(
     return _render_table(request, db)
 
 
+@router.get("/products/{product_id}/edit", response_class=HTMLResponse)
+async def edit_product(request: Request, product_id: int, db: Session = Depends(get_db)):
+    product = crud.get_product(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="产品不存在")
+    master = _load_master(db)
+    return templates.TemplateResponse(
+        "partials/_edit_modal.html",
+        {
+            "request": request,
+            "title": "编辑理财产品",
+            "form_action": f"/product_tracker/products/{product_id}",
+            "form_template": "product_tracker/products/_form_fields.html",
+            "hx_target": "#product-table",
+            "hx_swap": "outerHTML",
+            "master": master,
+            "item": product,
+            "show_status": True,
+        },
+    )
+
+
+@router.post("/products/{product_id}", response_class=HTMLResponse)
+async def update_product(
+    request: Request,
+    product_id: int,
+    db: Session = Depends(get_db),
+    name: str = Form(...),
+    type_id: Optional[int] = Form(default=None),
+    risk_level_id: Optional[int] = Form(default=None),
+    launch_date: Optional[str] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
+    status: str = Form(default="active"),
+):
+    payload = ProductMasterCreate(
+        name=name,
+        type_id=type_id,
+        risk_level_id=risk_level_id,
+        launch_date=date.fromisoformat(launch_date) if launch_date else None,
+        remark=remark or None,
+    )
+    product = crud.update_product(db, product_id, payload, status=status)
+    if not product:
+        raise HTTPException(status_code=404, detail="产品不存在")
+    response = _render_table(request, db)
+    response.headers["HX-Toast"] = "理财产品已更新"
+    return response
+
+
 @router.post("/products/{product_id}/status", response_class=HTMLResponse)
 async def update_status(
     request: Request,

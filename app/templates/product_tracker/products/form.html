@@ -22,57 +22,8 @@
         hx-swap="outerHTML"
         _="on htmx:afterRequest set #product-form-modal.innerHTML to ''"
       >
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">产品名称</label>
-          <input
-            type="text"
-            name="name"
-            class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            required
-          />
-        </div>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">产品类型</label>
-            <select
-              name="type_id"
-              class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">---</option>
-              {% for item in master.product_types %}
-              <option value="{{ item.id }}">{{ item.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">风险等级</label>
-            <select
-              name="risk_level_id"
-              class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">---</option>
-              {% for item in master.risk_levels %}
-              <option value="{{ item.id }}">{{ item.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">发行日期</label>
-            <input
-              type="date"
-              name="launch_date"
-              class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-          <div class="space-y-2 md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">备注</label>
-            <textarea
-              name="remark"
-              rows="2"
-              class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            ></textarea>
-          </div>
-        </div>
+        {% set show_status = false %}
+        {% include "product_tracker/products/_form_fields.html" %}
         <div class="flex justify-end gap-4 pt-2">
           <button
             type="button"

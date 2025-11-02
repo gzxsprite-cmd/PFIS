@@ -1,0 +1,66 @@
+{% set current = item if item is defined else None %}
+<div class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700">产品名称</label>
+  <input
+    type="text"
+    name="name"
+    class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+    value="{{ current.name if current else '' }}"
+    required
+  />
+</div>
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">产品类型</label>
+    <select
+      name="type_id"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+    >
+      <option value="">---</option>
+      {% for option in master.product_types %}
+      <option value="{{ option.id }}" {% if current and current.type_id == option.id %}selected{% endif %}>{{ option.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">风险等级</label>
+    <select
+      name="risk_level_id"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+    >
+      <option value="">---</option>
+      {% for option in master.risk_levels %}
+      <option value="{{ option.id }}" {% if current and current.risk_level_id == option.id %}selected{% endif %}>{{ option.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">发行日期</label>
+    <input
+      type="date"
+      name="launch_date"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      value="{{ current.launch_date.isoformat() if current and current.launch_date else '' }}"
+    />
+  </div>
+  <div class="space-y-2 md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700">备注</label>
+    <textarea
+      name="remark"
+      rows="2"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+    >{{ current.remark if current and current.remark else '' }}</textarea>
+  </div>
+</div>
+{% if show_status %}
+<div class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700">状态</label>
+  <select
+    name="status"
+    class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+  >
+    <option value="active" {% if not current or current.status == 'active' %}selected{% endif %}>启用</option>
+    <option value="inactive" {% if current and current.status == 'inactive' %}selected{% endif %}>停用</option>
+  </select>
+</div>
+{% endif %}

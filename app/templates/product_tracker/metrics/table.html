@@ -5,19 +5,15 @@
       <th class="px-4 py-3 text-right">数值</th>
       <th class="px-4 py-3 text-left">来源</th>
       <th class="px-4 py-3 text-left">备注</th>
+      <th class="px-4 py-3 text-right">操作</th>
     </tr>
   </thead>
   <tbody class="divide-y divide-gray-100">
     {% for record in records %}
-    <tr class="transition hover:bg-blue-50/40">
-      <td class="px-4 py-3">{{ record.record_date }}</td>
-      <td class="px-4 py-3 text-right font-semibold text-blue-600">{{ '%.4f'|format(record.value) }}</td>
-      <td class="px-4 py-3">{{ record.source or '' }}</td>
-      <td class="px-4 py-3">{{ record.remark or '' }}</td>
-    </tr>
+    {% include "product_tracker/metrics/row.html" %}
     {% else %}
     <tr>
-      <td colspan="4" class="px-4 py-6 text-center text-gray-400">暂无指标数据</td>
+      <td colspan="5" class="px-4 py-6 text-center text-gray-400">暂无指标数据</td>
     </tr>
     {% endfor %}
   </tbody>

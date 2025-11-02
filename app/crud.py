@@ -58,6 +58,13 @@ def create_master_data(db: Session, payload: MasterDataCreate) -> models.Base:
     return instance
 
 
+def get_master_item(db: Session, table: str, row_id: int) -> Optional[models.Base]:
+    model_cls = MASTER_TABLES.get(table)
+    if not model_cls:
+        return None
+    return db.get(model_cls, row_id)
+
+
 def toggle_master_status(db: Session, table: str, row_id: int, status: str) -> Optional[models.Base]:
     model_cls = MASTER_TABLES.get(table)
     if not model_cls:
@@ -105,9 +112,24 @@ def list_cash_flows(db: Session, include_inactive: bool = False) -> List[models.
     return list(db.execute(stmt).scalars())
 
 
+def get_cash_flow(db: Session, record_id: int) -> Optional[models.CashFlow]:
+    return db.get(models.CashFlow, record_id)
+
+
 def create_cash_flow(db: Session, payload: CashFlowCreate) -> models.CashFlow:
     cash_flow = models.CashFlow(**payload.dict())
     db.add(cash_flow)
+    db.commit()
+    db.refresh(cash_flow)
+    return cash_flow
+
+
+def update_cash_flow(db: Session, record_id: int, payload: CashFlowCreate) -> Optional[models.CashFlow]:
+    cash_flow = db.get(models.CashFlow, record_id)
+    if not cash_flow:
+        return None
+    for field, value in payload.dict().items():
+        setattr(cash_flow, field, value)
     db.commit()
     db.refresh(cash_flow)
     return cash_flow
@@ -133,9 +155,24 @@ def list_investments(db: Session, include_inactive: bool = False) -> List[models
     return list(db.execute(stmt).scalars())
 
 
+def get_investment(db: Session, record_id: int) -> Optional[models.InvestmentLog]:
+    return db.get(models.InvestmentLog, record_id)
+
+
 def create_investment(db: Session, payload: InvestmentLogCreate) -> models.InvestmentLog:
     investment = models.InvestmentLog(**payload.dict())
     db.add(investment)
+    db.commit()
+    db.refresh(investment)
+    return investment
+
+
+def update_investment(db: Session, record_id: int, payload: InvestmentLogCreate) -> Optional[models.InvestmentLog]:
+    investment = db.get(models.InvestmentLog, record_id)
+    if not investment:
+        return None
+    for field, value in payload.dict().items():
+        setattr(investment, field, value)
     db.commit()
     db.refresh(investment)
     return investment
@@ -170,6 +207,25 @@ def add_product(db: Session, payload: ProductMasterCreate) -> models.ProductMast
     return product
 
 
+def update_product(
+    db: Session,
+    product_id: int,
+    payload: ProductMasterCreate,
+    *,
+    status: Optional[str] = None,
+) -> Optional[models.ProductMaster]:
+    product = db.get(models.ProductMaster, product_id)
+    if not product:
+        return None
+    for field, value in payload.dict().items():
+        setattr(product, field, value)
+    if status:
+        product.status = status
+    db.commit()
+    db.refresh(product)
+    return product
+
+
 def update_product_status(db: Session, product_id: int, status: str) -> Optional[models.ProductMaster]:
     product = db.get(models.ProductMaster, product_id)
     if not product:
@@ -183,6 +239,23 @@ def update_product_status(db: Session, product_id: int, status: str) -> Optional
 def add_product_metric(db: Session, payload: ProductMetricCreate) -> models.ProductMetric:
     metric = models.ProductMetric(**payload.dict())
     db.add(metric)
+    db.commit()
+    db.refresh(metric)
+    return metric
+
+
+def get_metric(db: Session, record_id: int) -> Optional[models.ProductMetric]:
+    return db.get(models.ProductMetric, record_id)
+
+
+def update_product_metric(
+    db: Session, record_id: int, payload: ProductMetricCreate
+) -> Optional[models.ProductMetric]:
+    metric = db.get(models.ProductMetric, record_id)
+    if not metric:
+        return None
+    for field, value in payload.dict().items():
+        setattr(metric, field, value)
     db.commit()
     db.refresh(metric)
     return metric
@@ -254,3 +327,23 @@ def monthly_cashflow(db: Session) -> List[Tuple[str, float]]:
         .order_by(func.strftime("%Y-%m", models.CashFlow.date))
     )
     return [(row[0], row[1]) for row in db.execute(stmt)]
+
+
+def update_master_data(
+    db: Session,
+    table: str,
+    row_id: int,
+    *,
+    name: Optional[str] = None,
+    status: Optional[str] = None,
+) -> Optional[models.Base]:
+    instance = get_master_item(db, table, row_id)
+    if not instance:
+        return None
+    if name is not None:
+        setattr(instance, "name", name)
+    if status is not None and hasattr(instance, "status"):
+        setattr(instance, "status", status)
+    db.commit()
+    db.refresh(instance)
+    return instance

@@ -124,6 +124,8 @@
       </div>
     </div>
 
+    <div id="modal-container" class="z-50"></div>
+
     <script>
       window.PFIS = window.PFIS || {};
       (function () {
@@ -132,6 +134,7 @@
         const modalMessageEl = document.getElementById('pfis-modal-message');
         const cancelBtn = modalEl.querySelector('[data-modal-action="cancel"]');
         const confirmBtn = modalEl.querySelector('[data-modal-action="confirm"]');
+        const modalContainer = document.getElementById('modal-container');
         let toastTimeout;
         let pendingAction = null;
 
@@ -238,6 +241,37 @@
             panel.classList.toggle('hidden', panel.dataset.masterPanel !== tabId);
           });
         };
+
+        window.PFIS.closeModal = function () {
+          if (modalContainer) {
+            modalContainer.innerHTML = '';
+          }
+          document.body.classList.remove('overflow-hidden');
+        };
+
+        document.addEventListener('click', (event) => {
+          if (event.target.matches('[data-modal-dismiss]')) {
+            window.PFIS.closeModal();
+          }
+        });
+
+        window.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && modalContainer && modalContainer.innerHTML.trim()) {
+            window.PFIS.closeModal();
+          }
+        });
+
+        document.body.addEventListener('htmx:afterSwap', (event) => {
+          if (event.target === modalContainer && modalContainer.innerHTML.trim()) {
+            document.body.classList.add('overflow-hidden');
+          }
+        });
+
+        document.body.addEventListener('htmx:afterSettle', (event) => {
+          if (event.target === modalContainer && !modalContainer.innerHTML.trim()) {
+            document.body.classList.remove('overflow-hidden');
+          }
+        });
       })();
     </script>
   </body>

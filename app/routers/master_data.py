@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Path, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -46,6 +48,54 @@ async def create(
             "items": master_data.get(_table_key(table), []),
         },
     )
+
+
+@router.get("/{table}/{item_id}/edit", response_class=HTMLResponse)
+async def edit_item(
+    request: Request,
+    table: str,
+    item_id: int,
+    db: Session = Depends(get_db),
+):
+    item = crud.get_master_item(db, table, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    return templates.TemplateResponse(
+        "partials/_edit_modal.html",
+        {
+            "request": request,
+            "title": "编辑主数据",
+            "form_action": f"/master_data/{table}/{item_id}",
+            "form_template": "master_data/_form_fields.html",
+            "hx_target": f"#table-{table}",
+            "hx_swap": "innerHTML",
+            "item": item,
+        },
+    )
+
+
+@router.post("/{table}/{item_id}", response_class=HTMLResponse)
+async def update_item(
+    request: Request,
+    table: str,
+    item_id: int,
+    name: str = Form(...),
+    status: Optional[str] = Form(default=None),
+    db: Session = Depends(get_db),
+):
+    if not crud.update_master_data(db, table, item_id, name=name, status=status):
+        raise HTTPException(status_code=404, detail="记录不存在")
+    master_data = crud.list_master_data(db, include_inactive=True)
+    response = templates.TemplateResponse(
+        "master_data/table.html",
+        {
+            "request": request,
+            "table": table,
+            "items": master_data.get(_table_key(table), []),
+        },
+    )
+    response.headers["HX-Toast"] = "主数据已更新"
+    return response
 
 
 @router.post("/{table}/{item_id}/status", response_class=HTMLResponse)

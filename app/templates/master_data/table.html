@@ -8,7 +8,10 @@
   </thead>
   <tbody class="divide-y divide-gray-100">
     {% for item in items %}
-    <tr class="transition hover:bg-blue-50/40 {{ 'opacity-60' if item.status == 'inactive' else '' }}">
+    <tr
+      id="master-row-{{ table }}-{{ item.id }}"
+      class="transition hover:bg-blue-50/40 {{ 'opacity-60' if item.status == 'inactive' else '' }}"
+    >
       <td class="px-4 py-3">{{ item.name }}</td>
       <td class="px-4 py-3">
         {% if item.status == 'active' %}
@@ -18,33 +21,44 @@
         {% endif %}
       </td>
       <td class="px-4 py-3 text-right">
-        {% if item.status == 'active' %}
-        <button
-          type="button"
-          class="text-sm font-medium text-rose-500 transition hover:text-rose-600"
-          hx-post="/master_data/{{ table }}/{{ item.id }}/status"
-          hx-vals='{"status": "inactive"}'
-          hx-target="#table-{{ table }}"
-          hx-swap="innerHTML"
-          hx-trigger="confirmed"
-          data-confirm="确认停用【{{ item.name }}】？如有关联数据将一并受影响。"
-          data-impact-url="/master_data/impact/{{ table }}/{{ item.id }}"
-          onclick="window.PFIS.confirmAction(this)"
-        >
-          停用
-        </button>
-        {% else %}
-        <button
-          type="button"
-          class="text-sm font-medium text-emerald-600 transition hover:text-emerald-700"
-          hx-post="/master_data/{{ table }}/{{ item.id }}/status"
-          hx-vals='{"status": "active"}'
-          hx-target="#table-{{ table }}"
-          hx-swap="innerHTML"
-        >
-          启用
-        </button>
-        {% endif %}
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="text-sm font-medium text-blue-600 transition hover:text-blue-700"
+            hx-get="/master_data/{{ table }}/{{ item.id }}/edit"
+            hx-target="#modal-container"
+            hx-swap="innerHTML"
+          >
+            编辑
+          </button>
+          {% if item.status == 'active' %}
+          <button
+            type="button"
+            class="text-sm font-medium text-rose-500 transition hover:text-rose-600"
+            hx-post="/master_data/{{ table }}/{{ item.id }}/status"
+            hx-vals='{"status": "inactive"}'
+            hx-target="#table-{{ table }}"
+            hx-swap="innerHTML"
+            hx-trigger="confirmed"
+            data-confirm="确认停用【{{ item.name }}】？如有关联数据将一并受影响。"
+            data-impact-url="/master_data/impact/{{ table }}/{{ item.id }}"
+            onclick="window.PFIS.confirmAction(this)"
+          >
+            停用
+          </button>
+          {% else %}
+          <button
+            type="button"
+            class="text-sm font-medium text-emerald-600 transition hover:text-emerald-700"
+            hx-post="/master_data/{{ table }}/{{ item.id }}/status"
+            hx-vals='{"status": "active"}'
+            hx-target="#table-{{ table }}"
+            hx-swap="innerHTML"
+          >
+            启用
+          </button>
+          {% endif %}
+        </div>
       </td>
     </tr>
     {% else %}

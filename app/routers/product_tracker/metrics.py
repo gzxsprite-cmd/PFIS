@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, Query, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -138,3 +138,61 @@ async def create_metric(
             "records": records,
         },
     )
+
+
+@router.get("/metrics/edit/{record_id}", response_class=HTMLResponse)
+async def edit_metric(request: Request, record_id: int, db: Session = Depends(get_db)):
+    record = crud.get_metric(db, record_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="指标不存在")
+    master = crud.list_master_data(db)
+    products = crud.list_products(db)
+    return templates.TemplateResponse(
+        "partials/_edit_modal.html",
+        {
+            "request": request,
+            "title": "编辑指标记录",
+            "form_action": f"/product_tracker/metrics/{record_id}",
+            "form_template": "product_tracker/metrics/_form_fields.html",
+            "hx_target": "#metric-table",
+            "hx_swap": "outerHTML",
+            "products": products,
+            "metrics": master.get("metrics", []),
+            "record": record,
+        },
+    )
+
+
+@router.post("/metrics/{record_id}", response_class=HTMLResponse)
+async def update_metric(
+    request: Request,
+    record_id: int,
+    db: Session = Depends(get_db),
+    product_id: int = Form(...),
+    metric_id: int = Form(...),
+    record_date: str = Form(...),
+    value: float = Form(...),
+    source: Optional[str] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
+):
+    payload = ProductMetricCreate(
+        product_id=product_id,
+        metric_id=metric_id,
+        record_date=date.fromisoformat(record_date),
+        value=value,
+        source=source or None,
+        remark=remark or None,
+    )
+    metric = crud.update_product_metric(db, record_id, payload)
+    if not metric:
+        raise HTTPException(status_code=404, detail="指标不存在")
+    records = _fetch_records(db, product_id, metric_id)
+    response = templates.TemplateResponse(
+        "product_tracker/metrics/table.html",
+        {
+            "request": request,
+            "records": records,
+        },
+    )
+    response.headers["HX-Toast"] = "指标记录已更新"
+    return response

@@ -13,33 +13,7 @@
   </thead>
   <tbody class="divide-y divide-gray-100">
     {% for item in cashflows %}
-    <tr class="transition hover:bg-blue-50/60 {{ 'opacity-60' if item.status == 'inactive' else '' }}">
-      <td class="px-4 py-3">{{ item.date }}</td>
-      <td class="px-4 py-3">{{ item.account.name if item.account else '' }}</td>
-      <td class="px-4 py-3">{{ item.category.name if item.category else '' }}</td>
-      <td class="px-4 py-3">{{ item.flow_type }}</td>
-      <td class="px-4 py-3 text-right font-semibold text-blue-600">{{ '%.2f'|format(item.amount) }}</td>
-      <td class="px-4 py-3">{{ item.source_type.name if item.source_type else '' }}</td>
-      <td class="px-4 py-3">{{ item.remark or '' }}</td>
-      <td class="px-4 py-3 text-right">
-        {% if item.status == 'active' %}
-        <button
-          type="button"
-          class="text-sm font-medium text-rose-500 transition hover:text-rose-600"
-          hx-delete="/cash_flow/{{ item.id }}"
-          hx-target="#cashflow-list"
-          hx-swap="innerHTML"
-          hx-trigger="confirmed"
-          data-confirm="确认逻辑删除该收支记录？"
-          onclick="window.PFIS.confirmAction(this)"
-        >
-          删除
-        </button>
-        {% else %}
-        <span class="text-xs text-gray-400">已删除</span>
-        {% endif %}
-      </td>
-    </tr>
+    {% include "cash_flow/row.html" %}
     {% else %}
     <tr>
       <td colspan="8" class="px-4 py-6 text-center text-gray-400">暂无记录</td>

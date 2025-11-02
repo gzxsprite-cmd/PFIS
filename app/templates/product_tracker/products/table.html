@@ -12,40 +12,7 @@
   </thead>
   <tbody class="divide-y divide-gray-100">
     {% for product in products %}
-    <tr class="transition hover:bg-blue-50/40 {% if product.status == 'inactive' %}opacity-60{% endif %}">
-      <td class="px-4 py-3">{{ product.name }}</td>
-      <td class="px-4 py-3">{{ product.product_type.name if product.product_type else '' }}</td>
-      <td class="px-4 py-3">{{ product.risk_level.name if product.risk_level else '' }}</td>
-      <td class="px-4 py-3">{{ product.launch_date or '-' }}</td>
-      <td class="px-4 py-3">
-        {% if product.status == 'active' %}
-        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-600">启用</span>
-        {% else %}
-        <span class="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-600">停用</span>
-        {% endif %}
-      </td>
-      <td class="px-4 py-3">{{ product.remark or '' }}</td>
-      <td class="px-4 py-3 text-right space-x-2">
-        {% if product.status == 'active' %}
-        <button
-          class="text-sm font-medium text-rose-500 transition hover:text-rose-600"
-          hx-post="/product_tracker/products/{{ product.id }}/status"
-          hx-vals='{"status": "inactive"}'
-          hx-target="#product-table"
-          hx-swap="outerHTML"
-          hx-confirm="确认逻辑删除该产品？"
-        >停用</button>
-        {% else %}
-        <button
-          class="text-sm font-medium text-emerald-600 transition hover:text-emerald-700"
-          hx-post="/product_tracker/products/{{ product.id }}/status"
-          hx-vals='{"status": "active"}'
-          hx-target="#product-table"
-          hx-swap="outerHTML"
-        >启用</button>
-        {% endif %}
-      </td>
-    </tr>
+    {% include "product_tracker/products/row.html" %}
     {% else %}
     <tr>
       <td colspan="7" class="px-4 py-6 text-center text-gray-400">暂无产品</td>
