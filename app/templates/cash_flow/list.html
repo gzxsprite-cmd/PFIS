@@ -1,24 +1,24 @@
-<table class="min-w-full table-auto text-sm text-gray-700">
-  <thead class="bg-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500">
+<table class="min-w-full table-auto text-sm text-left text-gray-700">
+  <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
     <tr>
-      <th class="px-4 py-3 text-left">日期</th>
-      <th class="px-4 py-3 text-left">账户</th>
-      <th class="px-4 py-3 text-left">类别</th>
-      <th class="px-4 py-3 text-left">类型</th>
+      <th class="px-4 py-3">日期</th>
+      <th class="px-4 py-3">账户</th>
+      <th class="px-4 py-3">类别</th>
+      <th class="px-4 py-3">类型</th>
       <th class="px-4 py-3 text-right">金额</th>
-      <th class="px-4 py-3 text-left">来源</th>
-      <th class="px-4 py-3 text-left">备注</th>
+      <th class="px-4 py-3">来源</th>
+      <th class="px-4 py-3">备注</th>
       <th class="px-4 py-3 text-right">操作</th>
     </tr>
   </thead>
   <tbody class="divide-y divide-gray-100">
     {% for item in cashflows %}
-    <tr class="transition hover:bg-blue-50/40 {{ 'opacity-60' if item.status == 'inactive' else '' }}">
+    <tr class="transition hover:bg-blue-50/60 {{ 'opacity-60' if item.status == 'inactive' else '' }}">
       <td class="px-4 py-3">{{ item.date }}</td>
       <td class="px-4 py-3">{{ item.account.name if item.account else '' }}</td>
       <td class="px-4 py-3">{{ item.category.name if item.category else '' }}</td>
       <td class="px-4 py-3">{{ item.flow_type }}</td>
-      <td class="px-4 py-3 text-right">{{ '%.2f'|format(item.amount) }}</td>
+      <td class="px-4 py-3 text-right font-semibold text-blue-600">{{ '%.2f'|format(item.amount) }}</td>
       <td class="px-4 py-3">{{ item.source_type.name if item.source_type else '' }}</td>
       <td class="px-4 py-3">{{ item.remark or '' }}</td>
       <td class="px-4 py-3 text-right">

@@ -1,63 +1,68 @@
 {% extends "base.html" %}
 {% block title %}PFIS 仪表盘{% endblock %}
 {% block content %}
-<section>
-  <h1 class="text-2xl font-semibold text-gray-800 mb-2">仪表盘总览</h1>
-  <p class="text-sm text-gray-500 mb-6">快速洞察当前资产状况与现金流趋势。</p>
+<section class="space-y-10">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">仪表盘总览</h1>
+    <p class="text-sm text-gray-500">快速洞察当前资产状况与现金流趋势。</p>
+  </header>
   <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-    <div class="bg-white shadow-md rounded-xl p-6">
+    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
       <p class="text-sm text-gray-500">总收入</p>
       <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_income) }}</p>
     </div>
-    <div class="bg-white shadow-md rounded-xl p-6">
+    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
       <p class="text-sm text-gray-500">总支出</p>
       <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_expense) }}</p>
     </div>
-    <div class="bg-white shadow-md rounded-xl p-6">
+    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
       <p class="text-sm text-gray-500">投资金额</p>
       <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
     </div>
-    <div class="bg-white shadow-md rounded-xl p-6">
+    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
       <p class="text-sm text-gray-500">净现金流</p>
       <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.net_cash) }}</p>
     </div>
   </div>
-</section>
-<section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-  <div class="bg-white shadow-md rounded-xl p-6 xl:col-span-2">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-medium text-gray-700">月度净现金流</h2>
-      <span class="text-xs text-gray-400">单位：人民币</span>
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    <div class="bg-white shadow-lg rounded-2xl p-8 xl:col-span-2">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-700">月度净现金流</h2>
+          <p class="text-xs text-gray-400">以月度维度观察净现金流变化趋势</p>
+        </div>
+        <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">人民币</span>
+      </div>
+      <div id="dashboard-cashflow" class="h-72"></div>
     </div>
-    <div id="dashboard-cashflow" class="h-72"></div>
-  </div>
-  <div class="bg-white shadow-md rounded-xl p-6">
-    <h2 class="text-lg font-medium text-gray-700 mb-4">快捷操作</h2>
-    <div class="space-y-3 text-sm">
-      <a href="/cash_flow" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-        <span>记录今日收支</span>
-        <span class="text-blue-500">→</span>
-      </a>
-      <a href="/investment" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-        <span>新增理财交易</span>
-        <span class="text-blue-500">→</span>
-      </a>
-      <a href="/product_tracker/products" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-        <span>维护理财产品</span>
-        <span class="text-blue-500">→</span>
-      </a>
-      <a href="/simulation" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-        <span>进行收益模拟</span>
-        <span class="text-blue-500">→</span>
-      </a>
-      <a href="/analytics" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-        <span>查看分析报告</span>
-        <span class="text-blue-500">→</span>
-      </a>
-      <a href="/master_data" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-        <span>维护主数据</span>
-        <span class="text-blue-500">→</span>
-      </a>
+    <div class="bg-white shadow-lg rounded-2xl p-8">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">快捷操作</h2>
+      <div class="space-y-3 text-sm">
+        <a href="/cash_flow" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>记录今日收支</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/investment" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>新增理财交易</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/product_tracker/products" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>维护理财产品</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/simulation" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>进行收益模拟</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/analytics" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>查看分析报告</span>
+          <span class="text-blue-500">→</span>
+        </a>
+        <a href="/master_data" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+          <span>维护主数据</span>
+          <span class="text-blue-500">→</span>
+        </a>
+      </div>
     </div>
   </div>
 </section>

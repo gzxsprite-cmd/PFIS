@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 {% block title %}收支记录 - PFIS{% endblock %}
 {% block content %}
-<section>
-  <div class="flex flex-col gap-2 mb-6">
+<section class="space-y-8">
+  <header class="space-y-2">
     <h1 class="text-2xl font-semibold text-gray-800">收支记录</h1>
     <p class="text-sm text-gray-500">通过 HTMX 快速登记每日收入与支出，实时刷新列表。</p>
-  </div>
-  <div class="bg-white shadow-md rounded-xl p-6 mb-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-medium text-gray-700">新增记录</h2>
-      <span class="text-xs text-gray-400">保存后将自动刷新下方列表</span>
+  </header>
+  <div class="bg-white shadow-lg rounded-2xl p-8 space-y-6">
+    <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-700">新增记录</h2>
+        <p class="text-xs text-gray-400">保存后将自动刷新下方列表</p>
+      </div>
+      <span class="text-xs text-blue-500/80">所有操作均为异步提交</span>
     </div>
     <div
       id="cashflow-form"
@@ -21,9 +24,9 @@
       <div class="text-sm text-gray-400">表单加载中...</div>
     </div>
   </div>
-  <div class="bg-white shadow-md rounded-xl p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-medium text-gray-700">收支明细</h2>
+  <div class="bg-white shadow-lg rounded-2xl p-8 space-y-4">
+    <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+      <h2 class="text-lg font-semibold text-gray-700">收支明细</h2>
       <span class="text-xs text-gray-400">双击表头可排序（浏览器自带功能）</span>
     </div>
     <div id="cashflow-list" class="overflow-x-auto">

@@ -1,22 +1,22 @@
-<table class="min-w-full table-auto text-sm text-gray-700">
-  <thead class="bg-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500">
+<table class="min-w-full table-auto text-sm text-left text-gray-700">
+  <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
     <tr>
-      <th class="px-4 py-3 text-left">日期</th>
-      <th class="px-4 py-3 text-left">产品</th>
-      <th class="px-4 py-3 text-left">动作</th>
+      <th class="px-4 py-3">日期</th>
+      <th class="px-4 py-3">产品</th>
+      <th class="px-4 py-3">动作</th>
       <th class="px-4 py-3 text-right">金额</th>
-      <th class="px-4 py-3 text-left">资金渠道</th>
-      <th class="px-4 py-3 text-left">备注</th>
+      <th class="px-4 py-3">资金渠道</th>
+      <th class="px-4 py-3">备注</th>
       <th class="px-4 py-3 text-right">操作</th>
     </tr>
   </thead>
   <tbody class="divide-y divide-gray-100">
     {% for item in investments %}
-    <tr class="transition hover:bg-blue-50/40 {{ 'opacity-60' if item.status == 'inactive' else '' }}">
+    <tr class="transition hover:bg-blue-50/60 {{ 'opacity-60' if item.status == 'inactive' else '' }}">
       <td class="px-4 py-3">{{ item.date }}</td>
       <td class="px-4 py-3">{{ item.product.name if item.product else '' }}</td>
       <td class="px-4 py-3">{{ item.action.name if item.action else '' }}</td>
-      <td class="px-4 py-3 text-right">{{ '%.2f'|format(item.amount) }}</td>
+      <td class="px-4 py-3 text-right font-semibold text-blue-600">{{ '%.2f'|format(item.amount) }}</td>
       <td class="px-4 py-3">{{ item.channel_account.name if item.channel_account else '' }}</td>
       <td class="px-4 py-3">{{ item.remark or '' }}</td>
       <td class="px-4 py-3 text-right">
