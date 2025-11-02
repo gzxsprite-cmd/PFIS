@@ -1,49 +1,73 @@
 {% extends "base.html" %}
 {% block title %}产品指标 - PFIS{% endblock %}
 {% block content %}
-<div class="page-header">
-  <h2 class="page-title">产品指标管理</h2>
-  <p class="page-subtitle">按产品与指标维度录入数据，Plotly 图表实时呈现趋势。</p>
-</div>
-<div class="space-y-6">
-  <div class="card">
-    <form class="grid md:grid-cols-4 gap-4 text-sm" id="metric-selector">
-      <div>
-        <label class="block text-slate-500 mb-1">产品</label>
-        <select name="product_id" class="input" hx-get="/product_tracker/metrics/table" hx-target="#metric-table" hx-swap="outerHTML" hx-include="#metric-selector" hx-trigger="change, load">
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">产品指标管理</h1>
+    <p class="text-sm text-gray-500">按产品与指标维度录入数据，Plotly 图表实时呈现趋势。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <form class="grid grid-cols-1 gap-6 md:grid-cols-3 text-sm" id="metric-selector">
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">产品</label>
+        <select
+          name="product_id"
+          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          hx-get="/product_tracker/metrics/table"
+          hx-target="#metric-table"
+          hx-swap="outerHTML"
+          hx-include="#metric-selector"
+          hx-trigger="change, load"
+        >
           {% for product in products %}
           <option value="{{ product.id }}" {% if product.id == selected_product_id %}selected{% endif %}>{{ product.name }}</option>
           {% endfor %}
         </select>
       </div>
-      <div>
-        <label class="block text-slate-500 mb-1">指标</label>
-        <select name="metric_id" class="input" hx-get="/product_tracker/metrics/table" hx-target="#metric-table" hx-swap="outerHTML" hx-include="#metric-selector" hx-trigger="change, load">
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">指标</label>
+        <select
+          name="metric_id"
+          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          hx-get="/product_tracker/metrics/table"
+          hx-target="#metric-table"
+          hx-swap="outerHTML"
+          hx-include="#metric-selector"
+          hx-trigger="change, load"
+        >
           {% for metric in metrics %}
           <option value="{{ metric.id }}" {% if metric.id == selected_metric_id %}selected{% endif %}>{{ metric.name }}</option>
           {% endfor %}
         </select>
       </div>
-      <div class="md:col-span-2 flex items-end justify-end">
+      <div class="flex items-end justify-end">
         <button
           type="button"
-          class="btn-primary"
+          class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700"
           hx-get="/product_tracker/metrics/form"
           hx-target="#metric-form-modal"
           hx-swap="innerHTML"
           hx-include="#metric-selector"
-        >录入数据</button>
+        >
+          录入数据
+        </button>
       </div>
     </form>
   </div>
-  <div class="card">
-    <div id="metric-chart" class="h-64"></div>
+  <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6 lg:col-span-2">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">指标趋势</h2>
+        <p class="text-sm text-gray-500">图表将根据选择的产品与指标自动更新。</p>
+      </div>
+      <div id="metric-chart" class="h-64"></div>
+    </div>
+    <div id="metric-table" class="bg-white rounded-2xl shadow-md p-6 space-y-4">
+      {% include "product_tracker/metrics/table.html" %}
+    </div>
   </div>
-  <div id="metric-table" class="card">
-    {% include "product_tracker/metrics/table.html" %}
-  </div>
-</div>
-<div id="metric-form-modal"></div>
+  <div id="metric-form-modal"></div>
+</section>
 <script>
   const layout = {margin: {t: 24, r: 16, b: 32, l: 40}, template: 'plotly_white'};
   const initialTrace = {x: {{ chart.dates | tojson }}, y: {{ chart.values | tojson }}, mode: 'lines+markers', line: {color: '#4f46e5'}};

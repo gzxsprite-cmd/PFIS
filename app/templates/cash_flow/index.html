@@ -6,11 +6,11 @@
     <h1 class="text-2xl font-semibold text-gray-800">收支记录</h1>
     <p class="text-sm text-gray-500">通过 HTMX 快速登记每日收入与支出，实时刷新列表。</p>
   </header>
-  <div class="bg-white shadow-lg rounded-2xl p-8 space-y-6">
-    <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-gray-700">新增记录</h2>
-        <p class="text-xs text-gray-400">保存后将自动刷新下方列表</p>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">新增记录</h2>
+        <p class="text-sm text-gray-500">保存后将自动刷新下方列表。</p>
       </div>
       <span class="text-xs text-blue-500/80">所有操作均为异步提交</span>
     </div>
@@ -24,10 +24,12 @@
       <div class="text-sm text-gray-400">表单加载中...</div>
     </div>
   </div>
-  <div class="bg-white shadow-lg rounded-2xl p-8 space-y-4">
-    <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-      <h2 class="text-lg font-semibold text-gray-700">收支明细</h2>
-      <span class="text-xs text-gray-400">双击表头可排序（浏览器自带功能）</span>
+  <div class="bg-white rounded-2xl shadow-md p-6 space-y-4">
+    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div class="space-y-1">
+        <h3 class="text-lg font-semibold text-gray-700">收支明细</h3>
+        <p class="text-sm text-gray-500">双击表头可排序（浏览器自带功能）。</p>
+      </div>
     </div>
     <div id="cashflow-list" class="overflow-x-auto">
       {% include "cash_flow/list.html" %}

@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 {% block title %}系统设置{% endblock %}
 {% block content %}
-<section class="bg-white shadow rounded p-6">
-  <h2 class="text-lg font-semibold">系统设置</h2>
-  <p class="text-sm text-slate-500 mt-2">后续可在此集成数据库备份、数据导入导出等功能。</p>
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">系统设置</h1>
+    <p class="text-sm text-gray-500">后续可在此集成数据库备份、数据导入导出等功能。</p>
+  </header>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-3">
+    <p class="text-sm text-gray-600">当前版本暂未提供其他可配置项。</p>
+    <p class="text-xs text-gray-400">更多扩展功能可在此模块持续完善。</p>
+  </div>
 </section>
 {% endblock %}

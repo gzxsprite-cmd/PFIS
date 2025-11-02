@@ -1,42 +1,45 @@
 {% extends "base.html" %}
 {% block title %}PFIS 仪表盘{% endblock %}
 {% block content %}
-<section class="space-y-10">
+<section class="space-y-8">
   <header class="space-y-2">
     <h1 class="text-2xl font-semibold text-gray-800">仪表盘总览</h1>
     <p class="text-sm text-gray-500">快速洞察当前资产状况与现金流趋势。</p>
   </header>
-  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
       <p class="text-sm text-gray-500">总收入</p>
-      <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_income) }}</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_income) }}</p>
     </div>
-    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
       <p class="text-sm text-gray-500">总支出</p>
-      <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_expense) }}</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_expense) }}</p>
     </div>
-    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
       <p class="text-sm text-gray-500">投资金额</p>
-      <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.total_invested) }}</p>
     </div>
-    <div class="bg-white shadow-lg rounded-2xl p-6 transition hover:shadow-xl">
+    <div class="bg-white rounded-2xl shadow-md p-6 space-y-2 transition hover:shadow-lg">
       <p class="text-sm text-gray-500">净现金流</p>
-      <p class="mt-2 text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.net_cash) }}</p>
+      <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.net_cash) }}</p>
     </div>
   </div>
-  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-    <div class="bg-white shadow-lg rounded-2xl p-8 xl:col-span-2">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-700">月度净现金流</h2>
-          <p class="text-xs text-gray-400">以月度维度观察净现金流变化趋势</p>
+  <div class="grid grid-cols-1 gap-8 xl:grid-cols-3">
+    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6 xl:col-span-2">
+      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-xl font-semibold text-gray-800">月度净现金流</h2>
+          <p class="text-sm text-gray-500">以月度维度观察净现金流变化趋势。</p>
         </div>
-        <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">人民币</span>
+        <span class="self-start rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">人民币</span>
       </div>
       <div id="dashboard-cashflow" class="h-72"></div>
     </div>
-    <div class="bg-white shadow-lg rounded-2xl p-8">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">快捷操作</h2>
+    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">快捷操作</h2>
+        <p class="text-sm text-gray-500">快速跳转至常用功能模块。</p>
+      </div>
       <div class="space-y-3 text-sm">
         <a href="/cash_flow" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
           <span>记录今日收支</span>

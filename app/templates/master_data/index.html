@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}主数据维护 - PFIS{% endblock %}
 {% block content %}
-<section>
-  <div class="flex flex-col gap-2 mb-6">
+<section class="space-y-8">
+  <header class="space-y-2">
     <h1 class="text-2xl font-semibold text-gray-800">主数据维护</h1>
     <p class="text-sm text-gray-500">统一管理账户、类别、指标等维度数据，支持逻辑删除与恢复。</p>
-  </div>
+  </header>
   {% set dims = [
     ('dim_account', '账户', master_data.accounts),
     ('dim_category', '类别', master_data.categories),
@@ -15,7 +15,7 @@
     ('dim_risk_level', '风险等级', master_data.risk_levels),
     ('dim_metric', '指标类型', master_data.metrics),
   ] %}
-  <div class="bg-white shadow-md rounded-xl p-6">
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
     <div class="flex flex-wrap gap-3 border-b border-gray-100 pb-4">
       {% for table, title, items in dims %}
       <button
@@ -29,7 +29,7 @@
       </button>
       {% endfor %}
     </div>
-    <div class="pt-6 space-y-6">
+    <div class="space-y-6">
       {% for table, title, items in dims %}
       <div
         id="tab-{{ table }}"
@@ -37,9 +37,9 @@
         class="space-y-4 {{ '' if loop.first else 'hidden' }}"
       >
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 class="text-lg font-medium text-gray-700">{{ title }}</h2>
-            <p class="text-xs text-gray-400">共 {{ items|length }} 条记录</p>
+          <div class="space-y-1">
+            <h2 class="text-xl font-semibold text-gray-800">{{ title }}</h2>
+            <p class="text-sm text-gray-500">共 {{ items|length }} 条记录</p>
           </div>
           <form
             class="flex w-full max-w-md items-center gap-3"
