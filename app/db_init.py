@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from .database import Base, SessionLocal, engine
 from . import models
+from .migrations import run_migrations
 
 
 MASTER_DEFAULTS = {
@@ -20,6 +21,7 @@ MASTER_DEFAULTS = {
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    run_migrations(engine)
     session = SessionLocal()
     try:
         for model_cls, names in MASTER_DEFAULTS.items():
