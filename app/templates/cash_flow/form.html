@@ -3,6 +3,7 @@
   hx-post="/cash_flow"
   hx-target="#cashflow-list"
   hx-swap="innerHTML"
+  hx-on::after-request="if(event.detail.successful) { this.reset(); }"
 >
   {% include "cash_flow/_form_fields.html" %}
   <div class="flex justify-end gap-4 pt-4">

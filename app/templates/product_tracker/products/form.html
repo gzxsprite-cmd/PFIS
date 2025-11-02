@@ -19,7 +19,7 @@
         class="space-y-6 text-sm"
         hx-post="/product_tracker/products"
         hx-target="#product-table"
-        hx-swap="outerHTML"
+        hx-swap="innerHTML"
         _="on htmx:afterRequest set #product-form-modal.innerHTML to ''"
       >
         {% set show_status = false %}

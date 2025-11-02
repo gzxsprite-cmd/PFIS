@@ -90,7 +90,7 @@ async def edit_product(request: Request, product_id: int, db: Session = Depends(
             "form_action": f"/product_tracker/products/{product_id}",
             "form_template": "product_tracker/products/_form_fields.html",
             "hx_target": "#product-table",
-            "hx_swap": "outerHTML",
+            "hx_swap": "innerHTML",
             "master": master,
             "item": product,
             "show_status": True,

@@ -155,7 +155,7 @@ async def edit_metric(request: Request, record_id: int, db: Session = Depends(ge
             "form_action": f"/product_tracker/metrics/{record_id}",
             "form_template": "product_tracker/metrics/_form_fields.html",
             "hx_target": "#metric-table",
-            "hx_swap": "outerHTML",
+            "hx_swap": "innerHTML",
             "products": products,
             "metrics": master.get("metrics", []),
             "record": record,

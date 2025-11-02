@@ -28,7 +28,7 @@
         hx-post="/product_tracker/products/{{ product.id }}/status"
         hx-vals='{"status": "inactive"}'
         hx-target="#product-table"
-        hx-swap="outerHTML"
+        hx-swap="innerHTML"
         hx-confirm="确认逻辑删除该产品？"
       >
         停用
@@ -39,7 +39,7 @@
         hx-post="/product_tracker/products/{{ product.id }}/status"
         hx-vals='{"status": "active"}'
         hx-target="#product-table"
-        hx-swap="outerHTML"
+        hx-swap="innerHTML"
       >
         启用
       </button>

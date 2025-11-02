@@ -46,6 +46,7 @@
             hx-post="/master_data"
             hx-target="#table-{{ table }}"
             hx-swap="innerHTML"
+            hx-on::after-request="if(event.detail.successful){ this.reset(); }"
           >
             <input type="hidden" name="table" value="{{ table }}" />
             <input

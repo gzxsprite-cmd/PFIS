@@ -3,6 +3,7 @@
   hx-post="/investment"
   hx-target="#investment-list"
   hx-swap="innerHTML"
+  hx-on::after-request="if(event.detail.successful) { this.reset(); }"
 >
   {% include "investment_log/_form_fields.html" %}
   <div class="flex justify-end gap-4 pt-4">
