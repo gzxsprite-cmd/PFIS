@@ -4,9 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}PFIS{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/tailwind.min.css') }}" />
     <script>
-      tailwind.config = {
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
         theme: {
           extend: {
             colors: {
@@ -17,8 +18,24 @@
           },
         },
       };
+      (function () {
+        const cdnSources = [
+          'https://cdn.tailwindcss.com?plugins=forms,typography',
+          'https://cdn.staticfile.org/tailwindcss/3.3.3/tailwind.min.js',
+          'https://fastly.jsdelivr.net/npm/tailwindcss@3.3.3/lib/index.js',
+        ];
+        const loadScript = (index) => {
+          if (index >= cdnSources.length) {
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = cdnSources[index];
+          script.onerror = () => loadScript(index + 1);
+          document.head.appendChild(script);
+        };
+        loadScript(0);
+      })();
     </script>
-    <link rel="stylesheet" href="/static/css/tailwind.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0" defer></script>
@@ -27,6 +44,7 @@
     class="bg-pfis-navy/95 text-gray-800 min-h-screen antialiased"
     _="on htmx:afterOnLoad call window.PFIS.handleHtmx(event)"
   >
+    <div class="bg-blue-600 text-white p-2 text-center">Tailwind 加载测试</div>
     {% set nav_items = [
       {"label": "仪表盘", "href": "/", "icon": "🏠"},
       {"label": "收支记录", "href": "/cash_flow", "icon": "💰"},
