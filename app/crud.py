@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import case, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from . import models
@@ -339,22 +339,52 @@ def analytics_summary(db: Session) -> Dict[str, float]:
     return dict(summary)
 
 
-def monthly_cashflow(db: Session) -> List[Tuple[str, float]]:
-    stmt = (
-        select(
-            func.strftime("%Y-%m", models.CashFlow.date),
-            func.sum(
-                case(
-                    (models.CashFlow.flow_type == "收入", models.CashFlow.amount),
-                    else_=-models.CashFlow.amount,
-                )
-            ),
+def monthly_cashflow(db: Session) -> List[Dict[str, Any]]:
+    cashflow_month = func.strftime("%Y-%m", models.CashFlow.date)
+    income_stmt = (
+        select(cashflow_month.label("month"), func.coalesce(func.sum(models.CashFlow.amount), 0))
+        .where(
+            models.CashFlow.status == "active",
+            models.CashFlow.flow_type == "收入",
         )
-        .where(models.CashFlow.status == "active")
-        .group_by(func.strftime("%Y-%m", models.CashFlow.date))
-        .order_by(func.strftime("%Y-%m", models.CashFlow.date))
+        .group_by(cashflow_month)
     )
-    return [(row[0], row[1]) for row in db.execute(stmt)]
+    expense_stmt = (
+        select(cashflow_month.label("month"), func.coalesce(func.sum(models.CashFlow.amount), 0))
+        .where(
+            models.CashFlow.status == "active",
+            models.CashFlow.flow_type == "支出",
+        )
+        .group_by(cashflow_month)
+    )
+    invest_month = func.strftime("%Y-%m", models.InvestmentLog.date)
+    invest_stmt = (
+        select(invest_month.label("month"), func.coalesce(func.sum(models.InvestmentLog.amount), 0))
+        .where(models.InvestmentLog.status == "active")
+        .group_by(invest_month)
+    )
+
+    income_map = {row.month: float(row[1] or 0) for row in db.execute(income_stmt)}
+    expense_map = {row.month: float(row[1] or 0) for row in db.execute(expense_stmt)}
+    invest_map = {row.month: float(row[1] or 0) for row in db.execute(invest_stmt)}
+
+    all_months = sorted(set(income_map) | set(expense_map) | set(invest_map))
+    results: List[Dict[str, Any]] = []
+    for month in all_months:
+        income = income_map.get(month, 0.0)
+        expense = expense_map.get(month, 0.0)
+        invested = invest_map.get(month, 0.0)
+        ratio = invested / income if income else 0.0
+        results.append(
+            {
+                "month": month,
+                "income": income,
+                "expense": expense,
+                "investment": invested,
+                "investment_ratio": ratio,
+            }
+        )
+    return results
 
 
 def update_master_data(

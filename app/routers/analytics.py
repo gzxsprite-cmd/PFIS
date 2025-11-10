@@ -18,7 +18,12 @@ templates = Jinja2Templates(directory="app/templates")
 async def analytics_home(request: Request, db: Session = Depends(get_db)):
     summary = crud.analytics_summary(db)
     monthly = crud.monthly_cashflow(db)
-    chart_data = json.dumps({"labels": [row[0] for row in monthly], "values": [row[1] for row in monthly]})
+    chart_data = json.dumps(
+        {
+            "labels": [row["month"] for row in monthly],
+            "values": [row["income"] - row["expense"] for row in monthly],
+        }
+    )
     return templates.TemplateResponse(
         "analytics.html",
         {

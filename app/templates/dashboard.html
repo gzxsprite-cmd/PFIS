@@ -96,21 +96,60 @@
 <script>
   window.PFISPlotlyReady(function () {
     const data = {{ monthly | tojson }};
-    const trace = {
-      x: data.map((row) => row[0]),
-      y: data.map((row) => row[1]),
+    const months = data.map((row) => row.month);
+    const incomeBar = {
+      x: months,
+      y: data.map((row) => row.income),
+      type: 'bar',
+      name: '总收入',
+      marker: { color: '#2563eb' },
+      hovertemplate: '收入: ¥%{y:.2f}<extra></extra>',
+    };
+    const expenseBar = {
+      x: months,
+      y: data.map((row) => row.expense),
+      type: 'bar',
+      name: '总支出',
+      marker: { color: '#f97316' },
+      hovertemplate: '支出: ¥%{y:.2f}<extra></extra>',
+    };
+    const ratioLine = {
+      x: months,
+      y: data.map((row) => row.investment_ratio),
       type: 'scatter',
-      fill: 'tozeroy',
-      line: { color: '#2563eb', width: 3 },
-      marker: { size: 6 },
+      mode: 'lines+markers',
+      name: '理财投入比例',
+      yaxis: 'y2',
+      line: { color: '#10b981', width: 3 },
+      marker: { color: '#0f766e', size: 8 },
+      hovertemplate: '理财比例: %{y:.1%}<extra></extra>',
     };
     const layout = {
-      margin: { t: 24, r: 16, b: 40, l: 48 },
+      margin: { t: 24, r: 48, b: 48, l: 56 },
       template: 'plotly_white',
       paper_bgcolor: 'transparent',
       plot_bgcolor: 'transparent',
+      barmode: 'group',
+      legend: { orientation: 'h', y: -0.2 },
+      yaxis: {
+        title: '金额 (¥)',
+        rangemode: 'tozero',
+      },
+      yaxis2: {
+        title: '理财投入比例',
+        overlaying: 'y',
+        side: 'right',
+        tickformat: '.0%',
+        rangemode: 'tozero',
+      },
+      xaxis: {
+        title: '月份',
+      },
     };
-    Plotly.newPlot('dashboard-cashflow', [trace], layout, { displayModeBar: false, responsive: true });
+    Plotly.newPlot('dashboard-cashflow', [incomeBar, expenseBar, ratioLine], layout, {
+      displayModeBar: false,
+      responsive: true,
+    });
   });
 </script>
 {% endblock %}
