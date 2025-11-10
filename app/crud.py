@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import date
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from . import models
@@ -15,6 +15,27 @@ from .schemas import (
     ProductMasterCreate,
     ProductMetricCreate,
 )
+
+INCOME_TYPES = {"收入", "income", "Income", "INCOME"}
+EXPENSE_TYPES = {"支出", "expense", "Expense", "EXPENSE"}
+BUY_ACTION_TYPES = {
+    "买入",
+    "申购",
+    "加仓",
+    "购买",
+    "buy",
+    "Buy",
+    "BUY",
+    "purchase",
+    "Purchase",
+    "PURCHASE",
+}
+BUY_ACTION_TYPES_LOWER = {name.lower() for name in BUY_ACTION_TYPES}
+
+def _is_active(column):
+    """Treat NULL or empty status as active for legacy rows."""
+
+    return or_(column == "active", column.is_(None), column == "")
 
 MASTER_TABLES = {
     "dim_account": models.DimAccount,
@@ -321,15 +342,15 @@ def analytics_summary(db: Session) -> Dict[str, float]:
     summary = defaultdict(float)
 
     income_stmt = select(func.coalesce(func.sum(models.CashFlow.amount), 0)).where(
-        models.CashFlow.flow_type == "收入",
-        models.CashFlow.status == "active",
+        models.CashFlow.flow_type.in_(INCOME_TYPES),
+        _is_active(models.CashFlow.status),
     )
     expense_stmt = select(func.coalesce(func.sum(models.CashFlow.amount), 0)).where(
-        models.CashFlow.flow_type == "支出",
-        models.CashFlow.status == "active",
+        models.CashFlow.flow_type.in_(EXPENSE_TYPES),
+        _is_active(models.CashFlow.status),
     )
     investment_stmt = select(func.coalesce(func.sum(models.InvestmentLog.amount), 0)).where(
-        models.InvestmentLog.status == "active"
+        _is_active(models.InvestmentLog.status)
     )
 
     summary["total_income"] = db.execute(income_stmt).scalar_one()
@@ -344,23 +365,41 @@ def monthly_cashflow(db: Session) -> List[Dict[str, Any]]:
     income_stmt = (
         select(cashflow_month.label("month"), func.coalesce(func.sum(models.CashFlow.amount), 0))
         .where(
-            models.CashFlow.status == "active",
-            models.CashFlow.flow_type == "收入",
+            _is_active(models.CashFlow.status),
+            models.CashFlow.flow_type.in_(INCOME_TYPES),
         )
         .group_by(cashflow_month)
     )
     expense_stmt = (
         select(cashflow_month.label("month"), func.coalesce(func.sum(models.CashFlow.amount), 0))
         .where(
-            models.CashFlow.status == "active",
-            models.CashFlow.flow_type == "支出",
+            _is_active(models.CashFlow.status),
+            models.CashFlow.flow_type.in_(EXPENSE_TYPES),
         )
         .group_by(cashflow_month)
     )
     invest_month = func.strftime("%Y-%m", models.InvestmentLog.date)
     invest_stmt = (
-        select(invest_month.label("month"), func.coalesce(func.sum(models.InvestmentLog.amount), 0))
-        .where(models.InvestmentLog.status == "active")
+        select(
+            invest_month.label("month"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (models.InvestmentLog.amount > 0, models.InvestmentLog.amount),
+                        else_=0.0,
+                    )
+                ),
+                0,
+            ),
+        )
+        .join(models.DimActionType, models.InvestmentLog.action)
+        .where(
+            _is_active(models.InvestmentLog.status),
+            or_(
+                models.DimActionType.name.in_(BUY_ACTION_TYPES),
+                func.lower(models.DimActionType.name).in_(BUY_ACTION_TYPES_LOWER),
+            ),
+        )
         .group_by(invest_month)
     )
 
