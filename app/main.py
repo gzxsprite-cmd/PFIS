@@ -6,7 +6,6 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from .db_init import init_db
 from .routers import (
-    analytics,
     cash_flow,
     dashboard,
     data_tools,
@@ -26,7 +25,6 @@ app.include_router(investment_log.router)
 app.include_router(product_tracker.router)
 app.include_router(master_data.router)
 app.include_router(simulation_lab.router)
-app.include_router(analytics.router)
 app.include_router(ocr_pending.router)
 app.include_router(data_tools.router)
 

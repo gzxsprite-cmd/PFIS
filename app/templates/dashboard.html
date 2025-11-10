@@ -48,8 +48,8 @@
       <p class="text-2xl font-bold text-blue-600">¥{{ '%.2f'|format(summary.net_cash) }}</p>
     </div>
   </div>
-  <div class="grid grid-cols-1 gap-8 xl:grid-cols-3">
-    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6 xl:col-span-2">
+  <div class="grid grid-cols-1 gap-8 xl:grid-cols-2">
+    <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
       <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div class="space-y-1">
           <h2 class="text-xl font-semibold text-gray-800">月度净现金流</h2>
@@ -61,35 +61,42 @@
     </div>
     <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
       <div class="space-y-1">
-        <h2 class="text-xl font-semibold text-gray-800">快捷操作</h2>
-        <p class="text-sm text-gray-500">快速跳转至常用功能模块。</p>
+        <h2 class="text-xl font-semibold text-gray-800">月度净现金结余</h2>
+        <p class="text-sm text-gray-500">总收入与总支出的差额，直观展示盈亏情况。</p>
       </div>
-      <div class="space-y-3 text-sm">
-        <a href="/cash_flow" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-          <span>记录今日收支</span>
-          <span class="text-blue-500">→</span>
-        </a>
-        <a href="/investment" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-          <span>新增理财交易</span>
-          <span class="text-blue-500">→</span>
-        </a>
-        <a href="/product_tracker/products" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-          <span>维护理财产品</span>
-          <span class="text-blue-500">→</span>
-        </a>
-        <a href="/simulation" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-          <span>进行收益模拟</span>
-          <span class="text-blue-500">→</span>
-        </a>
-        <a href="/analytics" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-          <span>查看分析报告</span>
-          <span class="text-blue-500">→</span>
-        </a>
-        <a href="/master_data" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
-          <span>维护主数据</span>
-          <span class="text-blue-500">→</span>
-        </a>
-      </div>
+      <div id="dashboard-netcash" class="h-72"></div>
+    </div>
+  </div>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="space-y-1">
+      <h2 class="text-xl font-semibold text-gray-800">快捷操作</h2>
+      <p class="text-sm text-gray-500">快速跳转至常用功能模块。</p>
+    </div>
+    <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <a href="/cash_flow" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+        <span>记录今日收支</span>
+        <span class="text-blue-500">→</span>
+      </a>
+      <a href="/investment" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+        <span>新增理财交易</span>
+        <span class="text-blue-500">→</span>
+      </a>
+      <a href="/product_tracker/products" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+        <span>维护理财产品</span>
+        <span class="text-blue-500">→</span>
+      </a>
+      <a href="/simulation" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+        <span>进行收益模拟</span>
+        <span class="text-blue-500">→</span>
+      </a>
+      <a href="/master_data" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+        <span>维护主数据</span>
+        <span class="text-blue-500">→</span>
+      </a>
+      <a href="/ocr" class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50">
+        <span>查看 OCR 任务</span>
+        <span class="text-blue-500">→</span>
+      </a>
     </div>
   </div>
 </section>
@@ -97,6 +104,11 @@
   window.PFISPlotlyReady(function () {
     const data = {{ monthly | tojson }};
     const months = data.map((row) => row.month);
+    if (!data.length) {
+      document.getElementById('dashboard-cashflow').innerHTML = '<div class="flex h-full items-center justify-center text-sm text-gray-500">暂无可展示的数据</div>';
+      document.getElementById('dashboard-netcash').innerHTML = '<div class="flex h-full items-center justify-center text-sm text-gray-500">暂无可展示的数据</div>';
+      return;
+    }
     const incomeBar = {
       x: months,
       y: data.map((row) => row.income),
@@ -150,6 +162,32 @@
       displayModeBar: false,
       responsive: true,
     });
+
+    const netContainer = document.getElementById('dashboard-netcash');
+    const netValues = data.map((row) => row.income - row.expense);
+    Plotly.newPlot(
+      netContainer,
+      [
+        {
+          x: months,
+          y: netValues,
+          type: 'bar',
+          marker: {
+            color: netValues.map((value) => (value >= 0 ? '#22c55e' : '#ef4444')),
+          },
+          hovertemplate: '净现金流: ¥%{y:.2f}<extra></extra>',
+        },
+      ],
+      {
+        margin: { t: 24, r: 24, b: 48, l: 56 },
+        template: 'plotly_white',
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        yaxis: { title: '净现金流 (¥)', zeroline: true },
+        xaxis: { title: '月份' },
+      },
+      { displayModeBar: false, responsive: true },
+    );
   });
 </script>
 {% endblock %}

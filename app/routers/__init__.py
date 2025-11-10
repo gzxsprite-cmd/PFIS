@@ -1,5 +1,4 @@
 from . import (
-    analytics,
     cash_flow,
     dashboard,
     data_tools,
@@ -11,7 +10,6 @@ from . import (
 )
 
 __all__ = [
-    "analytics",
     "cash_flow",
     "dashboard",
     "data_tools",
