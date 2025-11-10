@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="/static/css/tailwind.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.12" defer></script>
+    <script>
+      window.__pfisPlotlyQueue = window.__pfisPlotlyQueue || [];
+      window.PFISPlotlyReady =
+        window.PFISPlotlyReady ||
+        function (callback) {
+          if (typeof callback === 'function') {
+            window.__pfisPlotlyQueue.push(callback);
+          }
+        };
+    </script>
     <script src="/static/js/plotly.min.js" defer></script>
   </head>
   <body
