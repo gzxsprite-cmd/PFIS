@@ -409,11 +409,14 @@ def monthly_cashflow(db: Session) -> List[Dict[str, Any]]:
 
     all_months = sorted(set(income_map) | set(expense_map) | set(invest_map))
     results: List[Dict[str, Any]] = []
+    running_net = 0.0
     for month in all_months:
         income = income_map.get(month, 0.0)
         expense = expense_map.get(month, 0.0)
         invested = invest_map.get(month, 0.0)
         ratio = invested / income if income else 0.0
+        net_cash = income - expense
+        running_net += net_cash
         results.append(
             {
                 "month": month,
@@ -421,6 +424,8 @@ def monthly_cashflow(db: Session) -> List[Dict[str, Any]]:
                 "expense": expense,
                 "investment": invested,
                 "investment_ratio": ratio,
+                "net_cash": net_cash,
+                "cumulative_net_cash": running_net,
             }
         )
     return results

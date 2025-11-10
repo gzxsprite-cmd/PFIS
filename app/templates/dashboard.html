@@ -164,27 +164,56 @@
     });
 
     const netContainer = document.getElementById('dashboard-netcash');
-    const netValues = data.map((row) => row.income - row.expense);
+    const netValues = data.map((row) => (typeof row.net_cash === 'number' ? row.net_cash : row.income - row.expense));
+    let running = 0;
+    const cumulativeNet = data.map((row, index) => {
+      const value = typeof row.cumulative_net_cash === 'number' ? row.cumulative_net_cash : (running += netValues[index]);
+      if (typeof row.cumulative_net_cash !== 'number') {
+        running = value;
+      }
+      return value;
+    });
+
+    const netBar = {
+      x: months,
+      y: netValues,
+      type: 'bar',
+      name: '净现金流',
+      marker: {
+        color: netValues.map((value) => (value >= 0 ? '#22c55e' : '#ef4444')),
+      },
+      hovertemplate: '净现金流: ¥%{y:.2f}<extra></extra>',
+    };
+
+    const cumulativeLine = {
+      x: months,
+      y: cumulativeNet,
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: '累计净现金额',
+      yaxis: 'y2',
+      line: { color: '#0ea5e9', width: 3 },
+      marker: { color: '#0284c7', size: 8 },
+      hovertemplate: '累计净现金: ¥%{y:.2f}<extra></extra>',
+    };
+
     Plotly.newPlot(
       netContainer,
-      [
-        {
-          x: months,
-          y: netValues,
-          type: 'bar',
-          marker: {
-            color: netValues.map((value) => (value >= 0 ? '#22c55e' : '#ef4444')),
-          },
-          hovertemplate: '净现金流: ¥%{y:.2f}<extra></extra>',
-        },
-      ],
+      [netBar, cumulativeLine],
       {
-        margin: { t: 24, r: 24, b: 48, l: 56 },
+        margin: { t: 24, r: 48, b: 48, l: 56 },
         template: 'plotly_white',
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
         yaxis: { title: '净现金流 (¥)', zeroline: true },
+        yaxis2: {
+          title: '累计净现金额 (¥)',
+          overlaying: 'y',
+          side: 'right',
+          showgrid: false,
+        },
         xaxis: { title: '月份' },
+        legend: { orientation: 'h', y: -0.2 },
       },
       { displayModeBar: false, responsive: true },
     );
