@@ -55,14 +55,39 @@
           <h2 class="text-xl font-semibold text-gray-800">月度净现金流</h2>
           <p class="text-sm text-gray-500">以月度维度观察净现金流变化趋势。</p>
         </div>
-        <span class="self-start rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">人民币</span>
+        <div class="flex items-center gap-2 rounded-full bg-gray-100 p-1 text-xs font-medium text-gray-600" data-range-group>
+          <button
+            type="button"
+            class="rounded-full px-3 py-1 transition data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+            data-range="6"
+          >近 6 个月</button>
+          <button
+            type="button"
+            class="rounded-full px-3 py-1 transition data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+            data-range="12"
+          >近 12 个月</button>
+        </div>
       </div>
       <div id="dashboard-cashflow" class="h-72"></div>
     </div>
     <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
-      <div class="space-y-1">
-        <h2 class="text-xl font-semibold text-gray-800">月度净现金结余</h2>
-        <p class="text-sm text-gray-500">总收入与总支出的差额，直观展示盈亏情况。</p>
+      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-xl font-semibold text-gray-800">月度净现金结余</h2>
+          <p class="text-sm text-gray-500">总收入与总支出的差额，直观展示盈亏情况。</p>
+        </div>
+        <div class="flex items-center gap-2 rounded-full bg-gray-100 p-1 text-xs font-medium text-gray-600" data-range-group>
+          <button
+            type="button"
+            class="rounded-full px-3 py-1 transition data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+            data-range="6"
+          >近 6 个月</button>
+          <button
+            type="button"
+            class="rounded-full px-3 py-1 transition data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+            data-range="12"
+          >近 12 个月</button>
+        </div>
       </div>
       <div id="dashboard-netcash" class="h-72"></div>
     </div>
@@ -102,121 +127,135 @@
 </section>
 <script>
   window.PFISPlotlyReady(function () {
-    const data = {{ monthly | tojson }};
-    const months = data.map((row) => row.month);
-    if (!data.length) {
+    const raw = {{ monthly | tojson }};
+    if (!raw.length) {
       document.getElementById('dashboard-cashflow').innerHTML = '<div class="flex h-full items-center justify-center text-sm text-gray-500">暂无可展示的数据</div>';
       document.getElementById('dashboard-netcash').innerHTML = '<div class="flex h-full items-center justify-center text-sm text-gray-500">暂无可展示的数据</div>';
       return;
     }
-    const incomeBar = {
-      x: months,
-      y: data.map((row) => row.income),
-      type: 'bar',
-      name: '总收入',
-      marker: { color: '#2563eb' },
-      hovertemplate: '收入: ¥%{y:.2f}<extra></extra>',
-    };
-    const expenseBar = {
-      x: months,
-      y: data.map((row) => row.expense),
-      type: 'bar',
-      name: '总支出',
-      marker: { color: '#f97316' },
-      hovertemplate: '支出: ¥%{y:.2f}<extra></extra>',
-    };
-    const ratioLine = {
-      x: months,
-      y: data.map((row) => row.investment_ratio),
-      type: 'scatter',
-      mode: 'lines+markers',
-      name: '理财投入比例',
-      yaxis: 'y2',
-      line: { color: '#10b981', width: 3 },
-      marker: { color: '#0f766e', size: 8 },
-      hovertemplate: '理财比例: %{y:.1%}<extra></extra>',
-    };
-    const layout = {
+
+    const cashflowEl = document.getElementById('dashboard-cashflow');
+    const netcashEl = document.getElementById('dashboard-netcash');
+    const rangeGroups = document.querySelectorAll('[data-range-group]');
+
+    const baseLayout = {
       margin: { t: 24, r: 48, b: 48, l: 56 },
       template: 'plotly_white',
       paper_bgcolor: 'transparent',
       plot_bgcolor: 'transparent',
-      barmode: 'group',
       legend: { orientation: 'h', y: -0.2 },
-      yaxis: {
-        title: '金额 (¥)',
-        rangemode: 'tozero',
-      },
-      yaxis2: {
-        title: '理财投入比例',
-        overlaying: 'y',
-        side: 'right',
-        tickformat: '.0%',
-        rangemode: 'tozero',
-      },
-      xaxis: {
-        title: '月份',
-      },
-    };
-    Plotly.newPlot('dashboard-cashflow', [incomeBar, expenseBar, ratioLine], layout, {
-      displayModeBar: false,
-      responsive: true,
-    });
-
-    const netContainer = document.getElementById('dashboard-netcash');
-    const netValues = data.map((row) => (typeof row.net_cash === 'number' ? row.net_cash : row.income - row.expense));
-    let running = 0;
-    const cumulativeNet = data.map((row, index) => {
-      const value = typeof row.cumulative_net_cash === 'number' ? row.cumulative_net_cash : (running += netValues[index]);
-      if (typeof row.cumulative_net_cash !== 'number') {
-        running = value;
-      }
-      return value;
-    });
-
-    const netBar = {
-      x: months,
-      y: netValues,
-      type: 'bar',
-      name: '净现金流',
-      marker: {
-        color: netValues.map((value) => (value >= 0 ? '#22c55e' : '#ef4444')),
-      },
-      hovertemplate: '净现金流: ¥%{y:.2f}<extra></extra>',
+      xaxis: { title: '月份' },
     };
 
-    const cumulativeLine = {
-      x: months,
-      y: cumulativeNet,
-      type: 'scatter',
-      mode: 'lines+markers',
-      name: '累计净现金额',
-      yaxis: 'y2',
-      line: { color: '#0ea5e9', width: 3 },
-      marker: { color: '#0284c7', size: 8 },
-      hovertemplate: '累计净现金: ¥%{y:.2f}<extra></extra>',
-    };
+    function subset(range) {
+      const size = Math.min(range, raw.length);
+      return raw.slice(raw.length - size);
+    }
 
-    Plotly.newPlot(
-      netContainer,
-      [netBar, cumulativeLine],
-      {
-        margin: { t: 24, r: 48, b: 48, l: 56 },
-        template: 'plotly_white',
-        paper_bgcolor: 'transparent',
-        plot_bgcolor: 'transparent',
-        yaxis: { title: '净现金流 (¥)', zeroline: true },
-        yaxis2: {
-          title: '累计净现金额 (¥)',
-          overlaying: 'y',
-          side: 'right',
-          showgrid: false,
+    function render(range) {
+      const data = subset(range);
+      const months = data.map((row) => row.month);
+
+      Plotly.react(
+        cashflowEl,
+        [
+          {
+            x: months,
+            y: data.map((row) => row.income),
+            type: 'bar',
+            name: '总收入',
+            marker: { color: '#2563eb' },
+            hovertemplate: '收入: ¥%{y:.2f}<extra></extra>',
+          },
+          {
+            x: months,
+            y: data.map((row) => row.expense),
+            type: 'bar',
+            name: '总支出',
+            marker: { color: '#f97316' },
+            hovertemplate: '支出: ¥%{y:.2f}<extra></extra>',
+          },
+          {
+            x: months,
+            y: data.map((row) => row.investment_ratio),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: '理财投入比例',
+            yaxis: 'y2',
+            line: { color: '#10b981', width: 3 },
+            marker: { color: '#0f766e', size: 8 },
+            hovertemplate: '理财比例: %{y:.1%}<extra></extra>',
+          },
+        ],
+        {
+          ...baseLayout,
+          barmode: 'group',
+          yaxis: { title: '金额 (¥)', rangemode: 'tozero' },
+          yaxis2: { title: '理财投入比例', overlaying: 'y', side: 'right', tickformat: '.0%', rangemode: 'tozero' },
         },
-        xaxis: { title: '月份' },
-        legend: { orientation: 'h', y: -0.2 },
-      },
-      { displayModeBar: false, responsive: true },
-    );
+        { displayModeBar: false, responsive: true },
+      );
+
+      const netValues = data.map((row) => (typeof row.net_cash === 'number' ? row.net_cash : row.income - row.expense));
+      const cumulativeNet = data.map((row, index) => {
+        if (typeof row.cumulative_net_cash === 'number') {
+          return row.cumulative_net_cash;
+        }
+        return netValues.slice(0, index + 1).reduce((acc, value) => acc + value, 0);
+      });
+
+      Plotly.react(
+        netcashEl,
+        [
+          {
+            x: months,
+            y: netValues,
+            type: 'bar',
+            name: '净现金流',
+            marker: { color: netValues.map((value) => (value >= 0 ? '#22c55e' : '#ef4444')) },
+            hovertemplate: '净现金流: ¥%{y:.2f}<extra></extra>',
+          },
+          {
+            x: months,
+            y: cumulativeNet,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: '累计净现金额',
+            yaxis: 'y2',
+            line: { color: '#0ea5e9', width: 3 },
+            marker: { color: '#0284c7', size: 8 },
+            hovertemplate: '累计净现金: ¥%{y:.2f}<extra></extra>',
+          },
+        ],
+        {
+          ...baseLayout,
+          yaxis: { title: '净现金流 (¥)', zeroline: true },
+          yaxis2: { title: '累计净现金额 (¥)', overlaying: 'y', side: 'right', showgrid: false },
+        },
+        { displayModeBar: false, responsive: true },
+      );
+    }
+
+    function setActive(range) {
+      rangeGroups.forEach((group) => {
+        group.querySelectorAll('[data-range]').forEach((btn) => {
+          btn.dataset.active = btn.dataset.range === String(range);
+        });
+      });
+    }
+
+    rangeGroups.forEach((group) => {
+      group.addEventListener('click', (event) => {
+        const target = event.target.closest('[data-range]');
+        if (!target) return;
+        const selected = parseInt(target.dataset.range || '6', 10);
+        setActive(selected);
+        render(selected);
+      });
+    });
+
+    setActive(6);
+    render(6);
   });
 </script>
 {% endblock %}
