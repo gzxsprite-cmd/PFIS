@@ -71,16 +71,20 @@
         </button>
       </div>
       <div class="md:ml-auto">
-        <button
-          type="button"
-          class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-          hx-get="/cash_flow/ai_analysis"
-          hx-target="#ai-analysis-panel"
-          hx-swap="innerHTML"
-          hx-include="#start-month,#end-month"
-        >
-          AI收支分析
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            hx-get="/cash_flow/ai_analysis"
+            hx-target="#ai-analysis-panel"
+            hx-swap="innerHTML"
+            hx-include="#start-month,#end-month"
+            hx-indicator="#ai-loading"
+          >
+            AI收支分析
+          </button>
+          <span id="ai-loading" class="htmx-indicator text-sm text-gray-500">分析中…</span>
+        </div>
       </div>
     </div>
   </div>
