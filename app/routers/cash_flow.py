@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from typing import Optional
+import os
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -32,6 +33,21 @@ def _render_table(request: Request, db: Session) -> HTMLResponse:
     )
 
 
+def _query_cashflows(
+    db: Session,
+    *,
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
+):
+    return crud.list_cash_flows_by_period(
+        db,
+        start_month=start_month,
+        end_month=end_month,
+        range_months=range_months,
+    )
+
+
 def _render_row(request: Request, cashflow) -> HTMLResponse:
     return templates.TemplateResponse(
         "partials/_table_row.html",
@@ -51,6 +67,119 @@ async def page(request: Request, db: Session = Depends(get_db)):
         {
             "request": request,
             "cashflows": cashflows,
+            "start_month": "",
+            "end_month": "",
+        },
+    )
+
+
+@router.get("/table", response_class=HTMLResponse)
+async def table(
+    request: Request,
+    db: Session = Depends(get_db),
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
+):
+    try:
+        cashflows = _query_cashflows(
+            db,
+            start_month=start_month,
+            end_month=end_month,
+            range_months=range_months,
+        )
+    except ValueError:
+        cashflows = []
+    return templates.TemplateResponse(
+        "cash_flow/list.html",
+        {
+            "request": request,
+            "cashflows": cashflows,
+        },
+    )
+
+
+@router.get("/ai_analysis", response_class=HTMLResponse)
+async def ai_analysis(
+    request: Request,
+    db: Session = Depends(get_db),
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
+):
+    try:
+        records = _query_cashflows(
+            db,
+            start_month=start_month,
+            end_month=end_month,
+            range_months=range_months,
+        )
+    except ValueError:
+        return templates.TemplateResponse(
+            "cash_flow/ai_analysis_result.html",
+            {
+                "request": request,
+                "analysis": "月份格式错误，请使用 YYYY-MM。",
+            },
+        )
+
+    if not records:
+        return templates.TemplateResponse(
+            "cash_flow/ai_analysis_result.html",
+            {
+                "request": request,
+                "analysis": "暂无可分析数据。",
+            },
+        )
+
+    data = [
+        {
+            "date": item.date.isoformat(),
+            "type": item.flow_type,
+            "amount": float(item.amount),
+            "category": item.category.name if item.category else "",
+            "remark": item.remark or "",
+        }
+        for item in records
+    ]
+
+    prompt = (
+        "请分析以下收支数据，输出：\n"
+        "1. 支出TOP项\n"
+        "2. 收入TOP项\n"
+        "3. 支出项月度波动\n"
+        "4. 收入项月度波动\n"
+        "5. 可执行优化建议\n\n"
+        f"数据：{data}"
+    )
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return templates.TemplateResponse(
+            "cash_flow/ai_analysis_result.html",
+            {
+                "request": request,
+                "analysis": "未配置 OPENAI_API_KEY，暂时无法生成 AI 分析。",
+            },
+        )
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=api_key)
+        response = client.responses.create(
+            model="gpt-5.2",
+            input=prompt,
+        )
+        result = response.output_text or "AI 未返回有效内容，请稍后重试。"
+    except Exception as exc:  # noqa: BLE001
+        result = f"AI 分析暂时不可用：{exc}"
+
+    return templates.TemplateResponse(
+        "cash_flow/ai_analysis_result.html",
+        {
+            "request": request,
+            "analysis": result,
         },
     )
 

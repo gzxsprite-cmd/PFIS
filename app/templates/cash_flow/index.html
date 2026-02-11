@@ -7,6 +7,84 @@
     <p class="text-sm text-gray-500">通过 HTMX 快速登记每日收入与支出，实时刷新列表。</p>
   </header>
   <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="space-y-1">
+        <label class="block text-sm text-gray-600" for="start-month">开始月份</label>
+        <input
+          id="start-month"
+          name="start_month"
+          type="month"
+          value="{{ start_month }}"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          hx-get="/cash_flow/table"
+          hx-target="#cashflow-table"
+          hx-trigger="change"
+          hx-swap="innerHTML"
+          hx-include="#start-month,#end-month"
+        />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-sm text-gray-600" for="end-month">结束月份</label>
+        <input
+          id="end-month"
+          name="end_month"
+          type="month"
+          value="{{ end_month }}"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          hx-get="/cash_flow/table"
+          hx-target="#cashflow-table"
+          hx-trigger="change"
+          hx-swap="innerHTML"
+          hx-include="#start-month,#end-month"
+        />
+      </div>
+      <div class="flex flex-wrap gap-2 md:ml-4">
+        <button
+          type="button"
+          class="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-200"
+          hx-get="/cash_flow/table"
+          hx-target="#cashflow-table"
+          hx-swap="innerHTML"
+          hx-vals='{"range_months": 3}'
+        >
+          近3个月
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-200"
+          hx-get="/cash_flow/table"
+          hx-target="#cashflow-table"
+          hx-swap="innerHTML"
+          hx-vals='{"range_months": 6}'
+        >
+          近6个月
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-200"
+          hx-get="/cash_flow/table"
+          hx-target="#cashflow-table"
+          hx-swap="innerHTML"
+          hx-vals='{"range_months": 12}'
+        >
+          近12个月
+        </button>
+      </div>
+      <div class="md:ml-auto">
+        <button
+          type="button"
+          class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          hx-get="/cash_flow/ai_analysis"
+          hx-target="#ai-analysis-panel"
+          hx-swap="innerHTML"
+          hx-include="#start-month,#end-month"
+        >
+          AI收支分析
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div class="space-y-1">
         <h2 class="text-xl font-semibold text-gray-800">收支列表</h2>
@@ -26,5 +104,6 @@
       {% include "cash_flow/list.html" %}
     </div>
   </div>
+  <div id="ai-analysis-panel"></div>
 </section>
 {% endblock %}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import case, func, or_, select
@@ -158,6 +158,41 @@ def list_cash_flows(db: Session, include_inactive: bool = False) -> List[models.
     )
     if not include_inactive:
         stmt = stmt.where(models.CashFlow.status == "active")
+    return list(db.execute(stmt).scalars())
+
+
+def list_cash_flows_by_period(
+    db: Session,
+    *,
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
+    include_inactive: bool = False,
+) -> List[models.CashFlow]:
+    stmt = select(models.CashFlow)
+
+    if not include_inactive:
+        stmt = stmt.where(_is_active(models.CashFlow.status))
+
+    if range_months:
+        today = datetime.today()
+        first_of_current = date(today.year, today.month, 1)
+        start_year = first_of_current.year
+        start_month_value = first_of_current.month - range_months + 1
+        while start_month_value <= 0:
+            start_year -= 1
+            start_month_value += 12
+        start_date = date(start_year, start_month_value, 1)
+        stmt = stmt.where(models.CashFlow.date >= start_date)
+    elif start_month and end_month:
+        start_date = datetime.strptime(start_month, "%Y-%m").date().replace(day=1)
+        end_start = datetime.strptime(end_month, "%Y-%m").date().replace(day=1)
+        next_month_year = end_start.year + (1 if end_start.month == 12 else 0)
+        next_month = 1 if end_start.month == 12 else end_start.month + 1
+        end_date = date(next_month_year, next_month, 1)
+        stmt = stmt.where(models.CashFlow.date >= start_date, models.CashFlow.date < end_date)
+
+    stmt = stmt.order_by(models.CashFlow.date.desc(), models.CashFlow.id.desc())
     return list(db.execute(stmt).scalars())
 
 
