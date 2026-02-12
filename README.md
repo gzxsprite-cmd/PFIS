@@ -19,22 +19,33 @@ uvicorn app.main:app --reload --port 8000
 
 ## 🔐 AI 分析配置
 
-PFIS 支持通过环境变量切换 LLM Provider（OpenAI / 千问兼容模式）。
+PFIS 通过 `LLM_PROVIDER` 切换模型提供方，业务层统一调用 `get_llm().chat(...)`。
 
-使用 OpenAI：
+使用 OpenAI（可选代理）：
 
 ```bash
 export LLM_PROVIDER=openai
 export OPENAI_API_KEY="your_openai_key"
-# 可选：export OPENAI_MODEL="gpt-5.2"
+# 可选
+export OPENAI_MODEL="gpt-4o-mini"
+export HTTP_PROXY="socks5h://127.0.0.1:1080"
+export LLM_TIMEOUT_SECONDS=60
 ```
 
-使用千问（DashScope Compatible API）：
+使用千问（DashScope Compatible API，不使用代理）：
 
 ```bash
 export LLM_PROVIDER=qwen
 export DASHSCOPE_API_KEY="your_dashscope_key"
-# 可选：export QWEN_MODEL="qwen-plus"
+# 可选
+export QWEN_MODEL="qwen-plus"
+export LLM_TIMEOUT_SECONDS=60
+```
+
+最小连通性测试：
+
+```bash
+python scripts/test_llm.py
 ```
 
 配置完成后按常规方式启动：
@@ -42,7 +53,6 @@ export DASHSCOPE_API_KEY="your_dashscope_key"
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
-
 
 ## 📁 项目结构
 

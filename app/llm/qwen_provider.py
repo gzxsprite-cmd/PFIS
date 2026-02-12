@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import httpx
-from openai import DefaultHttpxClient, OpenAI
+from openai import OpenAI
 
-from ..config import DASHSCOPE_API_KEY, LLM_PROXY, LLM_TIMEOUT_SECONDS, QWEN_BASE_URL, QWEN_MODEL
+from ..config import DASHSCOPE_API_KEY, QWEN_BASE_URL, QWEN_MODEL
+from .http_client import build_qwen_http_client
 
 
 class QwenProvider:
@@ -14,10 +14,7 @@ class QwenProvider:
         self.client = OpenAI(
             api_key=DASHSCOPE_API_KEY,
             base_url=QWEN_BASE_URL,
-            http_client=DefaultHttpxClient(
-                proxy=LLM_PROXY,
-                timeout=httpx.Timeout(LLM_TIMEOUT_SECONDS),
-            ),
+            http_client=build_qwen_http_client(),
             max_retries=0,
         )
         self.model = QWEN_MODEL

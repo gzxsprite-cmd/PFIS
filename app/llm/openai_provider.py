@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import httpx
-from openai import DefaultHttpxClient, OpenAI
+from openai import OpenAI
 
-from ..config import LLM_PROXY, LLM_TIMEOUT_SECONDS, OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
+from ..config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
+from .http_client import build_openai_http_client
 
 
 class OpenAIProvider:
@@ -14,10 +14,7 @@ class OpenAIProvider:
         self.client = OpenAI(
             api_key=OPENAI_API_KEY,
             base_url=OPENAI_BASE_URL,
-            http_client=DefaultHttpxClient(
-                proxy=LLM_PROXY,
-                timeout=httpx.Timeout(LLM_TIMEOUT_SECONDS),
-            ),
+            http_client=build_openai_http_client(),
             max_retries=0,
         )
         self.model = OPENAI_MODEL
