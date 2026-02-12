@@ -19,14 +19,22 @@ uvicorn app.main:app --reload --port 8000
 
 ## 🔐 AI 分析配置
 
-启用“AI 收支分析”前，请先配置 OpenAI Key：
+PFIS 支持通过环境变量切换 LLM Provider（OpenAI / 千问兼容模式）。
+
+使用 OpenAI：
 
 ```bash
-# Linux / macOS
-export OPENAI_API_KEY="your_api_key"
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY="your_openai_key"
+# 可选：export OPENAI_MODEL="gpt-5.2"
+```
 
-# Windows PowerShell
-$env:OPENAI_API_KEY="your_api_key"
+使用千问（DashScope Compatible API）：
+
+```bash
+export LLM_PROVIDER=qwen
+export DASHSCOPE_API_KEY="your_dashscope_key"
+# 可选：export QWEN_MODEL="qwen-plus"
 ```
 
 配置完成后按常规方式启动：

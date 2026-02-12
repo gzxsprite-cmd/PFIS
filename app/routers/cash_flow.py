@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..database import get_db
 from ..schemas import CashFlowCreate
-from ..services.openai_client import get_openai_client
+from ..llm.provider import get_llm
 from ..utils import encode_header_value
 
 router = APIRouter(prefix="/cash_flow", tags=["Cash Flow"])
@@ -254,12 +254,13 @@ async def ai_analysis(
     )
 
     try:
-        client = get_openai_client()
-        response = client.responses.create(
-            model="gpt-5.2",
-            input=prompt,
+        llm = get_llm()
+        analysis = llm.chat(
+            [
+                {"role": "system", "content": "你是中文个人财务分析助手，请给出清晰可执行建议。"},
+                {"role": "user", "content": prompt},
+            ]
         )
-        analysis = response.output_text or ""
         status = "ok"
         message = ""
         if not analysis:
