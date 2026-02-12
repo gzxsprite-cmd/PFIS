@@ -284,7 +284,6 @@ async def ai_analysis(
             "status": status,
             "message": message,
             "analysis": analysis,
-            "analysis_top_points": _extract_top_points(analysis),
             "analysis_markdown": analysis,
             "start_month": start_month or "",
             "end_month": end_month or "",
