@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud
 from ..database import get_db
+from ..cashflow_period import calculate_recent_month_range, period_label, resolve_period
 from ..schemas import CashFlowCreate
 from ..llm.provider import get_llm
 from ..utils import encode_header_value
@@ -65,11 +66,8 @@ def _build_filter_label(
     end_month: Optional[str],
     range_months: Optional[int],
 ) -> str:
-    if range_months:
-        return f"近{range_months}个月"
-    if start_month and end_month:
-        return f"{start_month} ~ {end_month}"
-    return "全部时间"
+    _ = range_months
+    return period_label(start_month, end_month)
 
 
 def _build_analysis_payload(
@@ -159,14 +157,17 @@ def _render_row(request: Request, cashflow) -> HTMLResponse:
 
 @router.get("", response_class=HTMLResponse)
 async def page(request: Request, db: Session = Depends(get_db)):
-    cashflows = crud.list_cash_flows(db)
+    start_month, end_month, _ = resolve_period(None, None, 6)
+    cashflows = _query_cashflows(db, start_month=start_month, end_month=end_month)
     return templates.TemplateResponse(
         "cash_flow/index.html",
         {
             "request": request,
             "cashflows": cashflows,
-            "start_month": "",
-            "end_month": "",
+            "start_month": start_month,
+            "end_month": end_month,
+            "range_months": 6,
+            "range_label": period_label(start_month, end_month),
         },
     )
 
@@ -180,11 +181,11 @@ async def table(
     range_months: Optional[int] = None,
 ):
     try:
+        start_month, end_month, _ = resolve_period(start_month, end_month, range_months)
         cashflows = _query_cashflows(
             db,
             start_month=start_month,
             end_month=end_month,
-            range_months=range_months,
         )
     except ValueError:
         cashflows = []
@@ -205,13 +206,13 @@ async def ai_analysis(
     end_month: Optional[str] = None,
     range_months: Optional[int] = None,
 ):
-    filter_label = _build_filter_label(start_month, end_month, range_months)
     try:
+        start_month, end_month, range_months = resolve_period(start_month, end_month, range_months)
+        filter_label = _build_filter_label(start_month, end_month, range_months)
         records = _query_cashflows(
             db,
             start_month=start_month,
             end_month=end_month,
-            range_months=range_months,
         )
     except ValueError:
         return templates.TemplateResponse(
@@ -283,8 +284,11 @@ async def ai_analysis(
             "status": status,
             "message": message,
             "analysis": analysis,
+            "analysis_top_points": _extract_top_points(analysis),
+            "analysis_markdown": analysis,
             "start_month": start_month or "",
             "end_month": end_month or "",
+            "range_months": range_months or "",
             "range_label": filter_label,
         },
     )
