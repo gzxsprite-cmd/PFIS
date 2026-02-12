@@ -17,6 +17,25 @@ uvicorn app.main:app --reload --port 8000
 
 访问 http://localhost:8000 即可打开仪表盘。
 
+## 🔐 AI 分析配置
+
+启用“AI 收支分析”前，请先配置 OpenAI Key：
+
+```bash
+# Linux / macOS
+export OPENAI_API_KEY="your_api_key"
+
+# Windows PowerShell
+$env:OPENAI_API_KEY="your_api_key"
+```
+
+配置完成后按常规方式启动：
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+
 ## 📁 项目结构
 
 ```

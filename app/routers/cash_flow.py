@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..database import get_db
 from ..schemas import CashFlowCreate
-from ..services.ai_client import AIClientError, AIClientTimeout, call_ai
+from ..services.openai_client import get_openai_client
 from ..utils import encode_header_value
 
 router = APIRouter(prefix="/cash_flow", tags=["Cash Flow"])
@@ -254,24 +254,26 @@ async def ai_analysis(
     )
 
     try:
-        analysis = call_ai(prompt)
+        client = get_openai_client()
+        response = client.responses.create(
+            model="gpt-5.2",
+            input=prompt,
+        )
+        analysis = response.output_text or ""
         status = "ok"
         message = ""
         if not analysis:
             status = "error"
             message = "AI 未返回有效内容，请稍后重试。"
-    except AIClientTimeout:
-        status = "timeout"
-        analysis = ""
-        message = "AI 分析暂时不可用：请求超时（中国本地网络可能不稳定）。请稍后重试。"
-    except AIClientError as exc:
-        status = "error"
-        analysis = ""
-        message = f"AI 分析失败：{exc}"
     except Exception as exc:  # noqa: BLE001
-        status = "error"
+        error_name = exc.__class__.__name__
         analysis = ""
-        message = f"AI 分析失败：{exc}"
+        if error_name in {"APITimeoutError", "APIConnectionError", "ConnectTimeout", "ReadTimeout"}:
+            status = "timeout"
+            message = "AI 分析暂时不可用：请求超时（中国本地网络可能不稳定）。请稍后重试。"
+        else:
+            status = "error"
+            message = f"AI 分析失败：{exc}"
 
     return templates.TemplateResponse(
         "cash_flow/ai_analysis_result.html",
