@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date
 import json
+import logging
+import re
 from typing import Any, Optional
 
 
@@ -20,6 +22,8 @@ from ..utils import encode_header_value
 
 router = APIRouter(prefix="/cash_flow", tags=["Cash Flow"])
 templates = Jinja2Templates(directory="app/templates")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def _load_master(db: Session):
@@ -206,15 +210,30 @@ async def ai_analysis(
     end_month: Optional[str] = None,
     range_months: Optional[int] = None,
 ):
+    logger.info(
+        "[cashflow.ai] start request start_month=%s end_month=%s range_months=%s",
+        start_month,
+        end_month,
+        range_months,
+    )
     try:
         start_month, end_month, range_months = resolve_period(start_month, end_month, range_months)
         filter_label = _build_filter_label(start_month, end_month, range_months)
+        logger.info(
+            "[cashflow.ai] resolved period start_month=%s end_month=%s range_months=%s label=%s",
+            start_month,
+            end_month,
+            range_months,
+            filter_label,
+        )
         records = _query_cashflows(
             db,
             start_month=start_month,
             end_month=end_month,
         )
+        logger.info("[cashflow.ai] queried records=%s", len(records))
     except ValueError:
+        logger.exception("[cashflow.ai] invalid period input")
         return templates.TemplateResponse(
             "cash_flow/ai_analysis_result.html",
             {
@@ -229,6 +248,7 @@ async def ai_analysis(
         )
 
     if not records:
+        logger.warning("[cashflow.ai] no records for period=%s", filter_label)
         return templates.TemplateResponse(
             "cash_flow/ai_analysis_result.html",
             {
@@ -243,6 +263,13 @@ async def ai_analysis(
         )
 
     payload = _build_analysis_payload(records, start_month, end_month, range_months)
+    logger.info(
+        "[cashflow.ai] payload summary records=%s monthly=%s expense_top=%s income_top=%s",
+        payload["summary"]["records"],
+        len(payload["monthly"]),
+        len(payload["expense_top"]),
+        len(payload["income_top"]),
+    )
     prompt = (
         "你是一名中文个人财务分析助手。请基于给定的聚合收支数据输出简明分析。\n"
         "请按以下结构输出：\n"
@@ -253,9 +280,11 @@ async def ai_analysis(
         "要求：结论清晰，避免空泛。\n\n"
         f"数据(JSON)：{json.dumps(payload, ensure_ascii=False)}"
     )
+    logger.info("[cashflow.ai] prompt length=%s", len(prompt))
 
     try:
         llm = get_llm()
+        logger.info("[cashflow.ai] provider=%s", llm.__class__.__name__)
         analysis = llm.chat(
             [
                 {"role": "system", "content": "你是中文个人财务分析助手，请给出清晰可执行建议。"},
@@ -267,6 +296,7 @@ async def ai_analysis(
         if not analysis:
             status = "error"
             message = "AI 未返回有效内容，请稍后重试。"
+        logger.info("[cashflow.ai] llm response length=%s status=%s", len(analysis or ""), status)
     except Exception as exc:  # noqa: BLE001
         error_name = exc.__class__.__name__
         analysis = ""
@@ -276,6 +306,17 @@ async def ai_analysis(
         else:
             status = "error"
             message = f"AI 分析失败：{exc}"
+        logger.exception("[cashflow.ai] llm call failed status=%s error=%s", status, exc)
+
+    list_pattern = re.compile(r"^\s*(?:[-*•]|\d+\.)\s+", re.MULTILINE)
+    list_item_matches = list_pattern.findall(analysis or "")
+    logger.info(
+        "[cashflow.ai] markdown diagnostics chars=%s list_items=%s has_heading=%s preview=%s",
+        len(analysis or ""),
+        len(list_item_matches),
+        bool(re.search(r"^\s*#{1,6}\s+", analysis or "", re.MULTILINE)),
+        (analysis or "").replace("\n", " ")[:160],
+    )
 
     return templates.TemplateResponse(
         "cash_flow/ai_analysis_result.html",
