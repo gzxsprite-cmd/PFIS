@@ -12,11 +12,6 @@
       >复制 Markdown</button>
       <button
         type="button"
-        id="toggle-ai-markdown"
-        class="text-blue-600 hover:underline"
-      >展开更多</button>
-      <button
-        type="button"
         class="text-blue-600 hover:underline"
         data-ai-regenerate
       >重新生成</button>
@@ -24,15 +19,8 @@
   </div>
 
   {% if status == "ok" %}
-  <div id="ai-summary-preview" class="rounded-xl bg-blue-50 p-4">
-    <h3 class="mb-2 text-sm font-semibold text-blue-700">Top 5 要点</h3>
-    <ol id="ai-top-points" class="list-decimal space-y-1 pl-5 text-sm text-blue-900">
-      <li>正在提取关键要点…</li>
-    </ol>
-  </div>
-
-  <div id="ai-markdown-wrapper" class="hidden space-y-2">
-    <h3 class="text-sm font-semibold text-gray-700">完整分析</h3>
+  <div id="ai-markdown-wrapper" class="space-y-2">
+    <h3 class="text-sm font-semibold text-gray-700">完整分析（原文）</h3>
     <div id="ai-markdown-root" class="prose prose-sm max-w-none rounded-xl border border-gray-100 bg-gray-50 p-4"></div>
   </div>
   <textarea id="ai-markdown-source" class="hidden">{{ analysis_markdown }}</textarea>
@@ -49,25 +37,17 @@
 <script>
   (function () {
     const card = document.getElementById('ai-analysis-card');
-    if (!card) {
-      return;
-    }
+    if (!card) return;
 
     const markdownSource = document.getElementById('ai-markdown-source');
     const markdownRootEl = document.getElementById('ai-markdown-root');
-    const markdownWrapper = document.getElementById('ai-markdown-wrapper');
-    const preview = document.getElementById('ai-summary-preview');
-    const topPointsContainer = document.getElementById('ai-top-points');
-    const toggleBtn = document.getElementById('toggle-ai-markdown');
     const copyBtn = document.getElementById('copy-ai-markdown');
     const regenerateBtn = card.querySelector('[data-ai-regenerate]');
 
     if (regenerateBtn) {
       regenerateBtn.addEventListener('click', () => {
         const externalBtn = document.getElementById('ai-regenerate-btn');
-        if (externalBtn) {
-          externalBtn.click();
-        }
+        if (externalBtn) externalBtn.click();
       });
     }
 
@@ -76,33 +56,11 @@
         try {
           await navigator.clipboard.writeText(markdownSource.value || '');
           copyBtn.textContent = '已复制';
-          setTimeout(() => {
-            copyBtn.textContent = '复制 Markdown';
-          }, 1200);
+          setTimeout(() => (copyBtn.textContent = '复制 Markdown'), 1200);
         } catch (error) {
           copyBtn.textContent = '复制失败';
         }
       });
-    }
-
-    function extractTopPoints(markdownText) {
-      const lines = (markdownText || '').split('\n');
-      const bulletPattern = /^\s*([-*•])\s+(.+)/;
-      const orderedPattern = /^\s*(\d+)\.\s+(.+)/;
-      const points = [];
-
-      for (const line of lines) {
-        const bulletMatch = line.match(bulletPattern);
-        const orderedMatch = line.match(orderedPattern);
-        if (bulletMatch) {
-          points.push(bulletMatch[2].trim());
-        } else if (orderedMatch) {
-          points.push(orderedMatch[2].trim());
-        }
-        if (points.length >= 5) break;
-      }
-
-      return points;
     }
 
     async function renderMarkdown(markdownText) {
@@ -130,35 +88,7 @@
     }
 
     if (markdownSource && markdownRootEl) {
-      const markdownText = markdownSource.value || '';
-
-      if (topPointsContainer) {
-        const points = extractTopPoints(markdownText);
-        topPointsContainer.innerHTML = '';
-        if (points.length === 0) {
-          const li = document.createElement('li');
-          li.textContent = '暂无关键要点';
-          topPointsContainer.appendChild(li);
-        } else {
-          points.forEach((point) => {
-            const li = document.createElement('li');
-            li.textContent = point;
-            topPointsContainer.appendChild(li);
-          });
-        }
-      }
-
-      renderMarkdown(markdownText);
-    }
-
-    let expanded = false;
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        expanded = !expanded;
-        if (preview) preview.classList.toggle('hidden', expanded);
-        if (markdownWrapper) markdownWrapper.classList.toggle('hidden', !expanded);
-        toggleBtn.textContent = expanded ? '收起' : '展开更多';
-      });
+      renderMarkdown(markdownSource.value || '');
     }
   })();
 </script>
