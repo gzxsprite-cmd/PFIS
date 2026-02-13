@@ -46,106 +46,119 @@
   {% endif %}
 </div>
 
-<script type="module">
-  import React from 'https://esm.sh/react@18.3.1';
-  import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
-  import ReactMarkdown from 'https://esm.sh/react-markdown@9.0.1';
-  import rehypeSanitize from 'https://esm.sh/rehype-sanitize@6.0.0';
-  import remarkGfm from 'https://esm.sh/remark-gfm@4.0.0';
+<script>
+  (function () {
+    const card = document.getElementById('ai-analysis-card');
+    if (!card) {
+      return;
+    }
 
-  const card = document.getElementById('ai-analysis-card');
-  if (!card) {
-    return;
-  }
+    const markdownSource = document.getElementById('ai-markdown-source');
+    const markdownRootEl = document.getElementById('ai-markdown-root');
+    const markdownWrapper = document.getElementById('ai-markdown-wrapper');
+    const preview = document.getElementById('ai-summary-preview');
+    const topPointsContainer = document.getElementById('ai-top-points');
+    const toggleBtn = document.getElementById('toggle-ai-markdown');
+    const copyBtn = document.getElementById('copy-ai-markdown');
+    const regenerateBtn = card.querySelector('[data-ai-regenerate]');
 
-  const markdownSource = document.getElementById('ai-markdown-source');
-  const markdownRootEl = document.getElementById('ai-markdown-root');
-  const markdownWrapper = document.getElementById('ai-markdown-wrapper');
-  const preview = document.getElementById('ai-summary-preview');
-  const topPointsContainer = document.getElementById('ai-top-points');
-  const toggleBtn = document.getElementById('toggle-ai-markdown');
-  const copyBtn = document.getElementById('copy-ai-markdown');
-  const regenerateBtn = card.querySelector('[data-ai-regenerate]');
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', () => {
+        const externalBtn = document.getElementById('ai-regenerate-btn');
+        if (externalBtn) {
+          externalBtn.click();
+        }
+      });
+    }
 
-  if (regenerateBtn) {
-    regenerateBtn.addEventListener('click', () => {
-      const externalBtn = document.getElementById('ai-regenerate-btn');
-      if (externalBtn) {
-        externalBtn.click();
+    if (copyBtn && markdownSource) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(markdownSource.value || '');
+          copyBtn.textContent = '已复制';
+          setTimeout(() => {
+            copyBtn.textContent = '复制 Markdown';
+          }, 1200);
+        } catch (error) {
+          copyBtn.textContent = '复制失败';
+        }
+      });
+    }
+
+    function extractTopPoints(markdownText) {
+      const lines = (markdownText || '').split('\n');
+      const bulletPattern = /^\s*([-*•])\s+(.+)/;
+      const orderedPattern = /^\s*(\d+)\.\s+(.+)/;
+      const points = [];
+
+      for (const line of lines) {
+        const bulletMatch = line.match(bulletPattern);
+        const orderedMatch = line.match(orderedPattern);
+        if (bulletMatch) {
+          points.push(bulletMatch[2].trim());
+        } else if (orderedMatch) {
+          points.push(orderedMatch[2].trim());
+        }
+        if (points.length >= 5) break;
       }
-    });
-  }
 
-  if (copyBtn && markdownSource) {
-    copyBtn.addEventListener('click', async () => {
+      return points;
+    }
+
+    async function renderMarkdown(markdownText) {
+      if (!markdownRootEl) return;
       try {
-        await navigator.clipboard.writeText(markdownSource.value || '');
-        copyBtn.textContent = '已复制';
-        setTimeout(() => {
-          copyBtn.textContent = '复制 Markdown';
-        }, 1200);
+        const React = (await import('https://esm.sh/react@18.3.1')).default;
+        const { createRoot } = await import('https://esm.sh/react-dom@18.3.1/client');
+        const ReactMarkdown = (await import('https://esm.sh/react-markdown@9.0.1')).default;
+        const rehypeSanitize = (await import('https://esm.sh/rehype-sanitize@6.0.0')).default;
+        const remarkGfm = (await import('https://esm.sh/remark-gfm@4.0.0')).default;
+
+        const root = createRoot(markdownRootEl);
+        root.render(
+          React.createElement(ReactMarkdown, {
+            children: markdownText,
+            remarkPlugins: [remarkGfm],
+            rehypePlugins: [rehypeSanitize],
+          })
+        );
       } catch (error) {
-        copyBtn.textContent = '复制失败';
+        markdownRootEl.classList.remove('prose');
+        markdownRootEl.classList.add('whitespace-pre-wrap', 'text-sm', 'text-gray-700');
+        markdownRootEl.textContent = markdownText;
       }
-    });
-  }
-
-  function extractTopPoints(markdownText) {
-    const lines = (markdownText || '').split('\n');
-    const bulletPattern = /^\s*([-*•])\s+(.+)/;
-    const orderedPattern = /^\s*(\d+)\.\s+(.+)/;
-    const points = [];
-
-    for (const line of lines) {
-      const bulletMatch = line.match(bulletPattern);
-      const orderedMatch = line.match(orderedPattern);
-      if (bulletMatch) {
-        points.push(bulletMatch[2].trim());
-      } else if (orderedMatch) {
-        points.push(orderedMatch[2].trim());
-      }
-      if (points.length >= 5) break;
     }
 
-    return points;
-  }
+    if (markdownSource && markdownRootEl) {
+      const markdownText = markdownSource.value || '';
 
-  if (markdownSource && markdownRootEl) {
-    const markdownText = markdownSource.value || '';
-
-    if (topPointsContainer) {
-      const points = extractTopPoints(markdownText);
-      topPointsContainer.innerHTML = '';
-      if (points.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = '暂无关键要点';
-        topPointsContainer.appendChild(li);
-      } else {
-        points.forEach((point) => {
+      if (topPointsContainer) {
+        const points = extractTopPoints(markdownText);
+        topPointsContainer.innerHTML = '';
+        if (points.length === 0) {
           const li = document.createElement('li');
-          li.textContent = point;
+          li.textContent = '暂无关键要点';
           topPointsContainer.appendChild(li);
-        });
+        } else {
+          points.forEach((point) => {
+            const li = document.createElement('li');
+            li.textContent = point;
+            topPointsContainer.appendChild(li);
+          });
+        }
       }
+
+      renderMarkdown(markdownText);
     }
 
-    const root = createRoot(markdownRootEl);
-    root.render(
-      React.createElement(ReactMarkdown, {
-        children: markdownText,
-        remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeSanitize],
-      })
-    );
-  }
-
-  let expanded = false;
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-      expanded = !expanded;
-      if (preview) preview.classList.toggle('hidden', expanded);
-      if (markdownWrapper) markdownWrapper.classList.toggle('hidden', !expanded);
-      toggleBtn.textContent = expanded ? '收起' : '展开更多';
-    });
-  }
+    let expanded = false;
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        expanded = !expanded;
+        if (preview) preview.classList.toggle('hidden', expanded);
+        if (markdownWrapper) markdownWrapper.classList.toggle('hidden', !expanded);
+        toggleBtn.textContent = expanded ? '收起' : '展开更多';
+      });
+    }
+  })();
 </script>
