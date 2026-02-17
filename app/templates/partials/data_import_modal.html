@@ -1,0 +1,52 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 backdrop-blur-sm px-4">
+  <div class="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl space-y-6">
+    <div class="space-y-2">
+      <h3 class="text-lg font-semibold text-gray-800">导入 Excel 数据</h3>
+      <p class="text-sm text-gray-500">上传符合 PFIS 模板结构的 Excel 文件，可选择全量重建或增量导入。</p>
+    </div>
+    <form
+      hx-post="/data/import"
+      hx-target="#modal-container"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data"
+      class="space-y-5"
+    >
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">选择 Excel 文件</label>
+        <input
+          type="file"
+          name="file"
+          accept=".xlsx"
+          required
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        />
+        <p class="text-xs text-gray-500">文件需包含与数据库表名一致的工作表，例如 dim_account、cash_flow 等。</p>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">导入模式</label>
+        <select
+          name="mode"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        >
+          <option value="replace">全量重建（清空当前数据后导入）</option>
+          <option value="append">增量导入（按主键更新或新增）</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-3 pt-2 text-sm">
+        <button
+          type="button"
+          class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition hover:bg-gray-200"
+          _="on click window.PFIS.closeModal()"
+        >
+          取消
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-green-600 px-5 py-2 text-white transition hover:bg-green-700"
+        >
+          开始导入
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

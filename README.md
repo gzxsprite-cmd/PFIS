@@ -17,6 +17,43 @@ uvicorn app.main:app --reload --port 8000
 
 访问 http://localhost:8000 即可打开仪表盘。
 
+## 🔐 AI 分析配置
+
+PFIS 通过 `LLM_PROVIDER` 切换模型提供方，业务层统一调用 `get_llm().chat(...)`。
+
+使用 OpenAI（可选代理）：
+
+```bash
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY="your_openai_key"
+# 可选
+export OPENAI_MODEL="gpt-4o-mini"
+export HTTP_PROXY="socks5h://127.0.0.1:1080"
+export LLM_TIMEOUT_SECONDS=60
+```
+
+使用千问（DashScope Compatible API，不使用代理）：
+
+```bash
+export LLM_PROVIDER=qwen
+export DASHSCOPE_API_KEY="your_dashscope_key"
+# 可选
+export QWEN_MODEL="qwen-plus"
+export LLM_TIMEOUT_SECONDS=60
+```
+
+最小连通性测试：
+
+```bash
+python scripts/test_llm.py
+```
+
+配置完成后按常规方式启动：
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
 ## 📁 项目结构
 
 ```
@@ -28,38 +65,45 @@ app/
 ├── schemas.py             # Pydantic 入参模型
 ├── crud.py                # 数据访问封装
 ├── routers/               # 功能模块路由
-│   ├── analytics.py
 │   ├── cash_flow.py
+│   ├── dashboard.py
+│   ├── data_tools.py
 │   ├── investment_log.py
 │   ├── master_data.py
 │   ├── ocr_pending.py
-│   ├── product_tracker.py
+│   ├── product_tracker/
+│   │   ├── __init__.py
+│   │   ├── products.py
+│   │   └── metrics.py
 │   └── simulation_lab.py
 ├── templates/             # Jinja2 模板（支持 HTMX 局部刷新）
 │   ├── base.html
 │   ├── dashboard.html
-│   ├── analytics.html
 │   ├── simulation_lab.html
-│   ├── master_data.html
 │   ├── ocr_pending.html
-│   ├── settings.html
 │   ├── cash_flow/
+│   │   ├── index.html
 │   │   ├── list.html
-│   │   └── form.html
+│   │   └── row.html
 │   ├── investment_log/
-│   │   ├── list.html
-│   │   └── form.html
+│   │   ├── index.html
+│   │   └── table.html
 │   ├── product_tracker/
+│   │   ├── products/
+│   │   │   ├── index.html
+│   │   │   ├── form.html
+│   │   │   └── table.html
+│   │   └── metrics/
+│   │       ├── index.html
+│   │       ├── form.html
+│   │       └── table.html
+│   ├── master_data/
+│   │   ├── index.html
 │   │   ├── list.html
-│   │   └── detail.html
-│   └── partials/
-│       ├── simulation_result.html
-│       ├── master_data_table.html
-│       └── master_data_options.html
+│   │   └── row.html
+│   └── partials/            # 共享弹窗、行模板、导入导出等片段
 ├── static/
-│   ├── css/tailwind.css   # 精简 Tailwind 风格样式
-│   ├── js/plotly.min.js   # Plotly 异步加载器
-│   └── uploads/ocr_pending/  # OCR 上传占位目录
+│   └── css/tailwind.css   # 精简 Tailwind 风格样式
 └── __init__.py
 
 requirements.txt
@@ -67,13 +111,13 @@ requirements.txt
 
 ## ✨ 主要功能
 
-- **仪表盘概览**：展示总收入、支出、投资及现金结余；快速导航各模块。
-- **收支记录**：通过 HTMX 动态加载表单及列表，支持上传凭证，自动登记 OCR 待处理。
-- **理财操作**：记录买入/赎回等动作，可选择同步生成现金流。
-- **产品追踪**：维护产品主档与指标，详情页使用 Plotly 展示收益曲线。
+- **仪表盘概览**：展示总收入、支出、投资及现金结余；双图对比月度收支与净现金流；快速导航各模块。
+- **收支记录**：HTMX 异步加载表单与表格，支持逻辑删除，自动标记状态。
+- **理财操作**：记录买入/赎回等动作，与账户维度联动并支持逻辑删除。
+- **产品追踪**：分离产品主数据与指标模块，Plotly 展示指标趋势并提供 JSON 数据接口。
 - **模拟实验室**：输入产品和金额，动态返回收益预测卡片，可继续发起买入。
-- **分析中心**：聚合统计与月度净现金流柱状图。
-- **主数据维护**：账户、类别、来源、产品维度等均可即时新增；可供其他表单通过 HTMX 刷新选项。
+- **主数据维护**：账户、类别、来源、指标等维度即时新增，逻辑删除前自动提示影响。
+- **数据导入/导出**：仪表盘提供 Excel 备份与恢复工具，支持全量重建或增量导入模式。
 - **OCR 待处理**：展示所有上传凭证的占位信息，为后续识别功能打基础。
 
 ## 🛠️ 开发说明

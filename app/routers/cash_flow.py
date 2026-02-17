@@ -1,87 +1,440 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import date
-from pathlib import Path
-from typing import Optional
-from uuid import uuid4
+import json
+import logging
+import re
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from .. import crud
 from ..database import get_db
+from ..cashflow_period import calculate_recent_month_range, period_label, resolve_period
 from ..schemas import CashFlowCreate
+from ..llm.provider import get_llm
+from ..utils import encode_header_value
 
-router = APIRouter(prefix="/cashflow", tags=["Cash Flow"])
+router = APIRouter(prefix="/cash_flow", tags=["Cash Flow"])
 templates = Jinja2Templates(directory="app/templates")
-UPLOAD_DIR = Path("app/static/uploads/ocr_pending")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
-@router.get("", response_class=HTMLResponse)
-async def cashflow_list(request: Request, db: Session = Depends(get_db)):
+def _load_master(db: Session):
+    return crud.list_master_data(db)
+
+
+def _render_table(request: Request, db: Session) -> HTMLResponse:
     cashflows = crud.list_cash_flows(db)
-    master_data = crud.list_master_data(db)
     return templates.TemplateResponse(
         "cash_flow/list.html",
         {
             "request": request,
             "cashflows": cashflows,
-            "master_data": master_data,
         },
     )
 
 
-@router.get("/form", response_class=HTMLResponse)
-async def cashflow_form(request: Request, db: Session = Depends(get_db)):
-    master_data = crud.list_master_data(db)
+def _query_cashflows(
+    db: Session,
+    *,
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
+):
+    return crud.list_cash_flows_by_period(
+        db,
+        start_month=start_month,
+        end_month=end_month,
+        range_months=range_months,
+    )
+
+
+def _normalize_flow_type(flow_type: str | None) -> str:
+    raw = (flow_type or "").strip().lower()
+    if raw in {value.lower() for value in crud.INCOME_TYPES}:
+        return "income"
+    if raw in {value.lower() for value in crud.EXPENSE_TYPES}:
+        return "expense"
+    return "other"
+
+
+def _build_filter_label(
+    start_month: Optional[str],
+    end_month: Optional[str],
+    range_months: Optional[int],
+) -> str:
+    _ = range_months
+    return period_label(start_month, end_month)
+
+
+def _build_analysis_payload(
+    records: list[Any],
+    start_month: Optional[str],
+    end_month: Optional[str],
+    range_months: Optional[int],
+) -> dict[str, Any]:
+    monthly: dict[str, dict[str, float]] = defaultdict(lambda: {"income": 0.0, "expense": 0.0})
+    category_stats: dict[str, dict[str, dict[str, float]]] = {
+        "income": defaultdict(lambda: {"amount": 0.0, "count": 0}),
+        "expense": defaultdict(lambda: {"amount": 0.0, "count": 0}),
+    }
+    remark_pool: dict[str, list[str]] = defaultdict(list)
+
+    for item in records:
+        flow_type = _normalize_flow_type(item.flow_type)
+        if flow_type not in {"income", "expense"}:
+            continue
+
+        month_key = item.date.strftime("%Y-%m")
+        amount = abs(float(item.amount or 0))
+        monthly[month_key][flow_type] += amount
+
+        category_name = item.category.name if item.category else "未分类"
+        category_stats[flow_type][category_name]["amount"] += amount
+        category_stats[flow_type][category_name]["count"] += 1
+
+        remark = (item.remark or "").strip()
+        if remark and len(remark_pool[f"{flow_type}:{category_name}"]) < 5:
+            remark_pool[f"{flow_type}:{category_name}"].append(remark)
+
+    def _top(flow: str) -> list[dict[str, Any]]:
+        items = sorted(
+            category_stats[flow].items(),
+            key=lambda pair: pair[1]["amount"],
+            reverse=True,
+        )[:5]
+        return [
+            {
+                "category": name,
+                "amount": round(stat["amount"], 2),
+                "count": int(stat["count"]),
+            }
+            for name, stat in items
+        ]
+
+    monthly_rows = [
+        {
+            "month": month,
+            "income": round(values["income"], 2),
+            "expense": round(values["expense"], 2),
+            "net": round(values["income"] - values["expense"], 2),
+        }
+        for month, values in sorted(monthly.items())
+    ]
+
+    return {
+        "range": {
+            "start_month": start_month,
+            "end_month": end_month,
+            "preset": range_months,
+            "label": _build_filter_label(start_month, end_month, range_months),
+        },
+        "summary": {
+            "records": len(records),
+            "income_total": round(sum(row["income"] for row in monthly.values()), 2),
+            "expense_total": round(sum(row["expense"] for row in monthly.values()), 2),
+        },
+        "monthly": monthly_rows,
+        "expense_top": _top("expense"),
+        "income_top": _top("income"),
+        "remark_samples": dict(remark_pool),
+    }
+
+
+def _render_row(request: Request, cashflow) -> HTMLResponse:
     return templates.TemplateResponse(
-        "cash_flow/form.html",
+        "partials/_table_row.html",
         {
             "request": request,
-            "master_data": master_data,
+            "row_template": "cash_flow/row.html",
+            "item": cashflow,
         },
     )
 
 
-@router.post("/add", response_class=HTMLResponse)
-async def cashflow_add(
+@router.get("", response_class=HTMLResponse)
+async def page(request: Request, db: Session = Depends(get_db)):
+    start_month, end_month, _ = resolve_period(None, None, 6)
+    cashflows = _query_cashflows(db, start_month=start_month, end_month=end_month)
+    return templates.TemplateResponse(
+        "cash_flow/index.html",
+        {
+            "request": request,
+            "cashflows": cashflows,
+            "start_month": start_month,
+            "end_month": end_month,
+            "range_months": 6,
+            "range_label": period_label(start_month, end_month),
+        },
+    )
+
+
+@router.get("/table", response_class=HTMLResponse)
+async def table(
     request: Request,
     db: Session = Depends(get_db),
-    date_value: str = Form(...),
-    account_id: str = Form(...),
-    category_id: Optional[str] = Form(default=None),
-    flow_type: str = Form(...),
-    amount: str = Form(...),
-    source_type_id: Optional[str] = Form(default=None),
-    remark: Optional[str] = Form(default=None),
-    receipt: Optional[UploadFile] = File(default=None),
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
 ):
-    payload = CashFlowCreate(
-        date=date.fromisoformat(date_value),
-        account_id=int(account_id),
-        category_id=int(category_id) if category_id else None,
-        flow_type=flow_type,
-        amount=float(amount),
-        source_type_id=int(source_type_id) if source_type_id else None,
-        remark=remark or None,
-    )
-    crud.create_cash_flow(db, payload)
-
-    if receipt and receipt.filename:
-        filename = f"cashflow_{uuid4().hex}_{receipt.filename}"
-        file_path = UPLOAD_DIR / filename
-        file_bytes = await receipt.read()
-        file_path.write_bytes(file_bytes)
-        crud.add_ocr_entry(db, "cashflow", f"/static/uploads/ocr_pending/{filename}")
-
-    cashflows = crud.list_cash_flows(db)
+    try:
+        start_month, end_month, _ = resolve_period(start_month, end_month, range_months)
+        cashflows = _query_cashflows(
+            db,
+            start_month=start_month,
+            end_month=end_month,
+        )
+    except ValueError:
+        cashflows = []
     return templates.TemplateResponse(
-        "cash_flow/table.html",
+        "cash_flow/list.html",
         {
             "request": request,
             "cashflows": cashflows,
         },
     )
+
+
+@router.get("/ai_analysis", response_class=HTMLResponse)
+async def ai_analysis(
+    request: Request,
+    db: Session = Depends(get_db),
+    start_month: Optional[str] = None,
+    end_month: Optional[str] = None,
+    range_months: Optional[int] = None,
+):
+    logger.info(
+        "[cashflow.ai] start request start_month=%s end_month=%s range_months=%s",
+        start_month,
+        end_month,
+        range_months,
+    )
+    try:
+        start_month, end_month, range_months = resolve_period(start_month, end_month, range_months)
+        filter_label = _build_filter_label(start_month, end_month, range_months)
+        logger.info(
+            "[cashflow.ai] resolved period start_month=%s end_month=%s range_months=%s label=%s",
+            start_month,
+            end_month,
+            range_months,
+            filter_label,
+        )
+        records = _query_cashflows(
+            db,
+            start_month=start_month,
+            end_month=end_month,
+        )
+        logger.info("[cashflow.ai] queried records=%s", len(records))
+    except ValueError:
+        logger.exception("[cashflow.ai] invalid period input")
+        return templates.TemplateResponse(
+            "cash_flow/ai_analysis_result.html",
+            {
+                "request": request,
+                "status": "error",
+                "message": "月份格式错误，请使用 YYYY-MM。",
+                "analysis": "",
+                "start_month": start_month or "",
+                "end_month": end_month or "",
+                "range_label": filter_label,
+            },
+        )
+
+    if not records:
+        logger.warning("[cashflow.ai] no records for period=%s", filter_label)
+        return templates.TemplateResponse(
+            "cash_flow/ai_analysis_result.html",
+            {
+                "request": request,
+                "status": "empty",
+                "message": "当前筛选范围暂无数据可分析。",
+                "analysis": "",
+                "start_month": start_month or "",
+                "end_month": end_month or "",
+                "range_label": filter_label,
+            },
+        )
+
+    payload = _build_analysis_payload(records, start_month, end_month, range_months)
+    logger.info(
+        "[cashflow.ai] payload summary records=%s monthly=%s expense_top=%s income_top=%s",
+        payload["summary"]["records"],
+        len(payload["monthly"]),
+        len(payload["expense_top"]),
+        len(payload["income_top"]),
+    )
+    prompt = (
+        "你是一名中文个人财务分析助手。请基于给定的聚合收支数据输出简明分析。\n"
+        "请按以下结构输出：\n"
+        "1. 支出TOP项（按金额）\n"
+        "2. 收入TOP项（按金额）\n"
+        "3. 月度波动结论（指出异常月份）\n"
+        "4. 三条可执行优化建议（具体到行为）\n"
+        "要求：结论清晰，避免空泛。\n\n"
+        f"数据(JSON)：{json.dumps(payload, ensure_ascii=False)}"
+    )
+    logger.info("[cashflow.ai] prompt length=%s", len(prompt))
+
+    try:
+        llm = get_llm()
+        logger.info("[cashflow.ai] provider=%s", llm.__class__.__name__)
+        analysis = llm.chat(
+            [
+                {"role": "system", "content": "你是中文个人财务分析助手，请给出清晰可执行建议。"},
+                {"role": "user", "content": prompt},
+            ]
+        )
+        status = "ok"
+        message = ""
+        if not analysis:
+            status = "error"
+            message = "AI 未返回有效内容，请稍后重试。"
+        logger.info("[cashflow.ai] llm response length=%s status=%s", len(analysis or ""), status)
+    except Exception as exc:  # noqa: BLE001
+        error_name = exc.__class__.__name__
+        analysis = ""
+        if error_name in {"APITimeoutError", "APIConnectionError", "ConnectTimeout", "ReadTimeout"}:
+            status = "timeout"
+            message = "AI 分析暂时不可用：请求超时（中国本地网络可能不稳定）。请稍后重试。"
+        else:
+            status = "error"
+            message = f"AI 分析失败：{exc}"
+        logger.exception("[cashflow.ai] llm call failed status=%s error=%s", status, exc)
+
+    list_pattern = re.compile(r"^\s*(?:[-*•]|\d+\.)\s+", re.MULTILINE)
+    list_item_matches = list_pattern.findall(analysis or "")
+    logger.info(
+        "[cashflow.ai] markdown diagnostics chars=%s list_items=%s has_heading=%s preview=%s",
+        len(analysis or ""),
+        len(list_item_matches),
+        bool(re.search(r"^\s*#{1,6}\s+", analysis or "", re.MULTILINE)),
+        (analysis or "").replace("\n", " ")[:160],
+    )
+
+    return templates.TemplateResponse(
+        "cash_flow/ai_analysis_result.html",
+        {
+            "request": request,
+            "status": status,
+            "message": message,
+            "analysis": analysis,
+            "analysis_markdown": analysis,
+            "start_month": start_month or "",
+            "end_month": end_month or "",
+            "range_months": range_months or "",
+            "range_label": filter_label,
+        },
+    )
+
+
+@router.get("/add_form", response_class=HTMLResponse)
+async def add_form(request: Request, db: Session = Depends(get_db)):
+    master_data = _load_master(db)
+    return templates.TemplateResponse(
+        "partials/_edit_modal.html",
+        {
+            "request": request,
+            "title": "新增收支记录",
+            "form_action": "/cash_flow",
+            "form_template": "cash_flow/_form_fields.html",
+            "hx_target": "#cashflow-table",
+            "hx_swap": "innerHTML",
+            "master_data": master_data,
+            "form_id": "cashflow-new",
+            "submit_label": "保存",
+        },
+    )
+
+
+@router.post("", response_class=HTMLResponse)
+async def create(
+    request: Request,
+    db: Session = Depends(get_db),
+    date_value: str = Form(...),
+    account_id: int = Form(...),
+    category_id: Optional[int] = Form(default=None),
+    flow_type: str = Form(...),
+    amount: float = Form(...),
+    source_type_id: Optional[int] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
+):
+    payload = CashFlowCreate(
+        date=date.fromisoformat(date_value),
+        account_id=account_id,
+        category_id=category_id,
+        flow_type=flow_type,
+        amount=amount,
+        source_type_id=source_type_id,
+        remark=remark or None,
+    )
+    crud.create_cash_flow(db, payload)
+    response = _render_table(request, db)
+    response.headers["HX-Toast"] = encode_header_value("收支记录已保存")
+    return response
+
+
+@router.delete("/{record_id}", response_class=HTMLResponse)
+async def delete_record(request: Request, record_id: int, db: Session = Depends(get_db)):
+    crud.soft_delete_cashflow(db, record_id)
+    response = _render_table(request, db)
+    response.headers["HX-Toast"] = encode_header_value("收支记录已删除")
+    return response
+
+
+@router.get("/edit/{record_id}", response_class=HTMLResponse)
+async def edit_record(request: Request, record_id: int, db: Session = Depends(get_db)):
+    cashflow = crud.get_cash_flow(db, record_id)
+    if not cashflow:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    master_data = crud.list_master_data(db)
+    return templates.TemplateResponse(
+        "partials/_edit_modal.html",
+        {
+            "request": request,
+            "title": "编辑收支记录",
+            "form_action": f"/cash_flow/{record_id}",
+            "form_template": "cash_flow/_form_fields.html",
+            "hx_target": f"#cashflow-row-{record_id}",
+            "hx_swap": "outerHTML",
+            "master_data": master_data,
+            "item": cashflow,
+            "form_id": f"cashflow-{record_id}",
+        },
+    )
+
+
+@router.post("/{record_id}", response_class=HTMLResponse)
+async def update_record(
+    request: Request,
+    record_id: int,
+    db: Session = Depends(get_db),
+    date_value: str = Form(...),
+    account_id: int = Form(...),
+    category_id: Optional[int] = Form(default=None),
+    flow_type: str = Form(...),
+    amount: float = Form(...),
+    source_type_id: Optional[int] = Form(default=None),
+    remark: Optional[str] = Form(default=None),
+):
+    payload = CashFlowCreate(
+        date=date.fromisoformat(date_value),
+        account_id=account_id,
+        category_id=category_id,
+        flow_type=flow_type,
+        amount=amount,
+        source_type_id=source_type_id,
+        remark=remark or None,
+    )
+    cashflow = crud.update_cash_flow(db, record_id, payload)
+    if not cashflow:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    response = _render_row(request, cashflow)
+    response.headers["HX-Toast"] = encode_header_value("收支记录已更新")
+    return response

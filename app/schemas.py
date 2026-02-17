@@ -22,25 +22,26 @@ class InvestmentLogCreate(BaseModel):
     product_id: int
     action_id: int
     amount: float
-    channel_id: Optional[int] = None
+    channel_account_id: Optional[int] = None
     remark: Optional[str] = None
+    cashflow_link_id: Optional[int] = None
 
 
 class ProductMasterCreate(BaseModel):
-    product_name: str
+    name: str
     type_id: Optional[int] = None
     risk_level_id: Optional[int] = None
+    investment_term_id: Optional[int] = None
     launch_date: Optional[date] = None
     remark: Optional[str] = None
-    is_active: bool = True
+    status: str = "active"
 
 
-class ProductMetricsCreate(BaseModel):
+class ProductMetricCreate(BaseModel):
     product_id: int
+    metric_id: int
     record_date: date
-    metric_1: Optional[float] = None
-    metric_2: Optional[float] = None
-    metric_3: Optional[float] = None
+    value: float
     source: Optional[str] = None
     remark: Optional[str] = None
 

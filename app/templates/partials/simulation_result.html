@@ -1,14 +1,16 @@
-<div class="bg-slate-50 border border-slate-200 rounded p-4">
-  <h3 class="text-md font-semibold text-indigo-600 mb-2">模拟结果</h3>
-  <p class="text-sm text-slate-600">产品：{{ product.product_name if product else '未找到' }}</p>
-  <p class="text-sm text-slate-600">投资金额：¥{{ '%.2f'|format(amount) }}</p>
-  <p class="text-sm text-slate-600">持有天数：{{ days }} 天</p>
-  <p class="text-sm text-slate-600">预测年化收益率：{{ '%.2f'|format(annual_yield * 100) }}%</p>
-  <p class="text-lg font-semibold text-emerald-600 mt-3">预计收益：¥{{ '%.2f'|format(est_profit) }}</p>
-  <button
-    class="mt-4 px-3 py-2 bg-emerald-600 text-white rounded"
-    hx-get="/investment/form?target=simulation-next-step"
-    hx-target="#simulation-next-step"
-    hx-swap="innerHTML"
-  >确认买入</button>
+<div class="rounded-2xl border border-gray-200 bg-gray-50 p-6 space-y-3">
+  <div class="space-y-1">
+    <h3 class="text-lg font-semibold text-blue-600">模拟结果</h3>
+    <p class="text-sm text-gray-600">产品：{{ product.name if product else '未找到' }}</p>
+    <p class="text-sm text-gray-600">投资金额：¥{{ '%.2f'|format(amount) }}</p>
+    <p class="text-sm text-gray-600">持有天数：{{ days }} 天</p>
+    <p class="text-sm text-gray-600">预测年化收益率：{{ '%.2f'|format(annual_yield * 100) }}%</p>
+  </div>
+  <p class="text-lg font-semibold text-emerald-600">预计收益：¥{{ '%.2f'|format(est_profit) }}</p>
+  <a
+    class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+    href="/investment"
+  >
+    前往新增理财操作
+  </a>
 </div>

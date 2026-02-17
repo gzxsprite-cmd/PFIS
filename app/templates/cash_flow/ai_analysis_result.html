@@ -1,0 +1,65 @@
+<div class="bg-white rounded-2xl shadow-md p-8 space-y-4" id="ai-analysis-card">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-800">AI 收支分析</h2>
+      <p class="text-xs text-gray-500">分析范围：{{ range_label }}</p>
+    </div>
+    <div class="flex items-center gap-3 text-sm">
+      <button
+        type="button"
+        id="copy-ai-markdown"
+        class="rounded-lg bg-gray-100 px-3 py-1.5 text-gray-700 transition hover:bg-gray-200"
+      >复制 Markdown</button>
+      <button
+        type="button"
+        class="text-blue-600 hover:underline"
+        data-ai-regenerate
+      >重新生成</button>
+    </div>
+  </div>
+
+  {% if status == "ok" %}
+  <div id="ai-markdown-wrapper" class="space-y-2">
+    <h3 class="text-sm font-semibold text-gray-700">完整分析（原文）</h3>
+    <pre id="ai-markdown-raw" class="whitespace-pre-wrap rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-800">{{ analysis_markdown }}</pre>
+  </div>
+  <textarea id="ai-markdown-source" class="hidden">{{ analysis_markdown }}</textarea>
+  {% else %}
+  <p class="text-sm {{ 'text-red-600' if status in ['timeout', 'error'] else 'text-amber-600' }}">{{ message }}</p>
+  {% if status == "timeout" %}
+  <p class="text-xs text-gray-500">
+    建议：检查网络后稍后重试；如长期超时，可在可访问 OpenAI 的网络环境运行，或切换到 Qwen provider。
+  </p>
+  {% endif %}
+  {% endif %}
+</div>
+
+<script>
+  (function () {
+    const card = document.getElementById('ai-analysis-card');
+    if (!card) return;
+
+    const markdownSource = document.getElementById('ai-markdown-source');
+    const copyBtn = document.getElementById('copy-ai-markdown');
+    const regenerateBtn = card.querySelector('[data-ai-regenerate]');
+
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', () => {
+        const externalBtn = document.getElementById('ai-regenerate-btn');
+        if (externalBtn) externalBtn.click();
+      });
+    }
+
+    if (copyBtn && markdownSource) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(markdownSource.value || '');
+          copyBtn.textContent = '已复制';
+          setTimeout(() => (copyBtn.textContent = '复制 Markdown'), 1200);
+        } catch (error) {
+          copyBtn.textContent = '复制失败';
+        }
+      });
+    }
+  })();
+</script>
