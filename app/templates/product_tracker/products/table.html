@@ -1,0 +1,23 @@
+<table class="min-w-full table-auto text-sm text-gray-700">
+  <thead class="bg-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500">
+    <tr>
+      <th class="px-4 py-3 text-left">产品名称</th>
+      <th class="px-4 py-3 text-left">类型</th>
+      <th class="px-4 py-3 text-left">风险等级</th>
+      <th class="px-4 py-3 text-left">投资期限</th>
+      <th class="px-4 py-3 text-left">发行日期</th>
+      <th class="px-4 py-3 text-left">状态</th>
+      <th class="px-4 py-3 text-left">备注</th>
+      <th class="px-4 py-3 text-right">操作</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-100">
+    {% for product in products %}
+    {% include "product_tracker/products/row.html" %}
+    {% else %}
+    <tr>
+      <td colspan="8" class="px-4 py-6 text-center text-gray-400">暂无产品</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

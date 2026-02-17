@@ -1,0 +1,90 @@
+{% set current = item if item is defined else None %}
+{% set form_prefix = form_id if form_id is defined else 'product' %}
+{% set select_class = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100' %}
+{% if target_select_id is defined %}
+<input type="hidden" name="target_select_id" value="{{ target_select_id }}" />
+<input type="hidden" name="target_field_name" value="{{ target_field_name }}" />
+<input type="hidden" name="include_blank" value="{{ 'true' if include_blank else 'false' }}" />
+<input type="hidden" name="blank_label" value="{{ blank_label }}" />
+{% endif %}
+<div class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700">产品名称</label>
+  <input
+    type="text"
+    name="name"
+    class="{{ select_class }}"
+    value="{{ current.name if current else '' }}"
+    required
+  />
+</div>
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">产品类型</label>
+    <select name="type_id" class="{{ select_class }}">
+      <option value="">---</option>
+      {% for option in master.product_types %}
+      <option value="{{ option.id }}" {% if current and current.type_id == option.id %}selected{% endif %}>{{ option.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">风险等级</label>
+    <select name="risk_level_id" class="{{ select_class }}">
+      <option value="">---</option>
+      {% for option in master.risk_levels %}
+      <option value="{{ option.id }}" {% if current and current.risk_level_id == option.id %}selected{% endif %}>{{ option.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">投资期限</label>
+    {% set term_select_id = form_prefix ~ '-term-select' %}
+    <div class="flex items-center gap-2">
+      <select id="{{ term_select_id }}" name="investment_term_id" class="{{ select_class }}">
+        <option value="">---</option>
+        {% for option in master.investment_terms %}
+        <option value="{{ option.id }}" {% if current and current.investment_term_id == option.id %}selected{% endif %}>{{ option.name }}</option>
+        {% endfor %}
+      </select>
+      <button
+        type="button"
+        class="text-sm font-medium text-blue-600 transition hover:text-blue-700"
+        hx-get="/master_data/quick_form/dim_investment_term"
+        hx-target="#modal-container"
+        hx-swap="innerHTML"
+        hx-vals='{{ {"field_id": term_select_id, "field_name": "investment_term_id", "include_blank": "true", "blank_label": "---"} | tojson }}'
+      >
+        ＋
+      </button>
+    </div>
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700">发行日期</label>
+    <input
+      type="date"
+      name="launch_date"
+      class="{{ select_class }}"
+      value="{{ current.launch_date.isoformat() if current and current.launch_date else '' }}"
+    />
+  </div>
+  <div class="space-y-2 md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700">备注</label>
+    <textarea
+      name="remark"
+      rows="2"
+      class="{{ select_class }}"
+    >{{ current.remark if current and current.remark else '' }}</textarea>
+  </div>
+</div>
+{% if show_status %}
+<div class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700">状态</label>
+  <select
+    name="status"
+    class="{{ select_class }}"
+  >
+    <option value="active" {% if not current or current.status == 'active' %}selected{% endif %}>启用</option>
+    <option value="inactive" {% if current and current.status == 'inactive' %}selected{% endif %}>停用</option>
+  </select>
+</div>
+{% endif %}

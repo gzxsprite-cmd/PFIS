@@ -1,0 +1,20 @@
+<table class="min-w-full table-auto text-sm text-gray-700">
+  <thead class="bg-gray-100 text-xs font-medium uppercase tracking-wide text-gray-500">
+    <tr>
+      <th class="px-4 py-3 text-left">记录日期</th>
+      <th class="px-4 py-3 text-right">数值</th>
+      <th class="px-4 py-3 text-left">来源</th>
+      <th class="px-4 py-3 text-left">备注</th>
+      <th class="px-4 py-3 text-right">操作</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-100">
+    {% for record in records %}
+    {% include "product_tracker/metrics/row.html" %}
+    {% else %}
+    <tr>
+      <td colspan="5" class="px-4 py-6 text-center text-gray-400">暂无指标数据</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

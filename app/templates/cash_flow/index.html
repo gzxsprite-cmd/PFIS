@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}收支记录 - PFIS{% endblock %}
+{% block content %}
+<section class="space-y-8" id="cashflow-page">
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold text-gray-800">收支记录</h1>
+    <p class="text-sm text-gray-500">通过 HTMX 快速登记每日收入与支出，实时刷新列表。</p>
+  </header>
+
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6" id="cashflow-filter-bar">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="space-y-1">
+        <label class="block text-sm text-gray-600" for="start-month">开始月份</label>
+        <input
+          id="start-month"
+          name="start_month"
+          type="month"
+          value="{{ start_month }}"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-sm text-gray-600" for="end-month">结束月份</label>
+        <input
+          id="end-month"
+          name="end_month"
+          type="month"
+          value="{{ end_month }}"
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        />
+      </div>
+      <div class="flex flex-wrap gap-2 md:ml-4" id="quick-range-group">
+        {% for months in [3, 6, 12] %}
+        <button
+          type="button"
+          data-range-months="{{ months }}"
+          class="rounded-lg px-3 py-2 text-sm transition {{ 'bg-blue-600 text-white' if range_months == months else 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+        >
+          近{{ months }}个月
+        </button>
+        {% endfor %}
+      </div>
+      <div class="md:ml-auto">
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            id="ai-regenerate-btn"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            重新生成分析
+          </button>
+          <span id="ai-loading" class="hidden text-sm text-gray-500">分析中…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ai-analysis-panel" class="space-y-4"></div>
+
+  <div class="bg-white rounded-2xl shadow-md p-8 space-y-6">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">收支列表</h2>
+        <p class="text-sm text-gray-500">所有新增、编辑与删除操作均通过 HTMX 弹窗完成。</p>
+      </div>
+      <button
+        type="button"
+        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+        hx-get="/cash_flow/add_form"
+        hx-target="#modal-container"
+        hx-swap="innerHTML"
+      >
+        新增记录
+      </button>
+    </div>
+    <div id="cashflow-table" class="overflow-x-auto">
+      {% include "cash_flow/list.html" %}
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const page = document.getElementById('cashflow-page');
+    if (!page) return;
+
+    const startInput = document.getElementById('start-month');
+    const endInput = document.getElementById('end-month');
+    const quickButtons = Array.from(document.querySelectorAll('[data-range-months]'));
+    const aiBtn = document.getElementById('ai-regenerate-btn');
+    const aiLoading = document.getElementById('ai-loading');
+
+    const state = {
+      startMonth: startInput.value,
+      endMonth: endInput.value,
+      rangeMode: '{{ range_months if range_months else "custom" }}',
+    };
+
+    function formatMonth(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    }
+
+    function calcRecentRange(months) {
+      const now = new Date();
+      const end = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = new Date(end.getFullYear(), end.getMonth() - months + 1, 1);
+      return { start: formatMonth(start), end: formatMonth(end) };
+    }
+
+    function syncInputs() {
+      startInput.value = state.startMonth || '';
+      endInput.value = state.endMonth || '';
+    }
+
+    function updateQuickButtonUI() {
+      quickButtons.forEach((button) => {
+        const active = String(state.rangeMode) === String(button.dataset.rangeMonths);
+        button.classList.toggle('bg-blue-600', active);
+        button.classList.toggle('text-white', active);
+        button.classList.toggle('bg-gray-100', !active);
+        button.classList.toggle('text-gray-700', !active);
+      });
+    }
+
+    function buildParams() {
+      return {
+        start_month: state.startMonth,
+        end_month: state.endMonth,
+      };
+    }
+
+    function refreshTable() {
+      htmx.ajax('GET', '/cash_flow/table', {
+        target: '#cashflow-table',
+        swap: 'innerHTML',
+        values: buildParams(),
+      });
+    }
+
+    function refreshAi() {
+      aiLoading.classList.remove('hidden');
+      htmx.ajax('GET', '/cash_flow/ai_analysis', {
+        target: '#ai-analysis-panel',
+        swap: 'innerHTML',
+        values: buildParams(),
+      });
+    }
+
+    function refreshAll() {
+      refreshTable();
+      refreshAi();
+    }
+
+    quickButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const months = Number(button.dataset.rangeMonths);
+        const range = calcRecentRange(months);
+        state.rangeMode = String(months);
+        state.startMonth = range.start;
+        state.endMonth = range.end;
+        syncInputs();
+        updateQuickButtonUI();
+        refreshAll();
+      });
+    });
+
+    function onCustomRangeChange() {
+      state.rangeMode = 'custom';
+      state.startMonth = startInput.value;
+      state.endMonth = endInput.value;
+      updateQuickButtonUI();
+      refreshAll();
+    }
+
+    startInput.addEventListener('change', onCustomRangeChange);
+    endInput.addEventListener('change', onCustomRangeChange);
+    aiBtn.addEventListener('click', refreshAi);
+
+    document.body.addEventListener('htmx:afterSwap', (event) => {
+      if (event.target && event.target.id === 'ai-analysis-panel') {
+        aiLoading.classList.add('hidden');
+      }
+    });
+
+    // keep SSR defaults in sync with runtime state
+    syncInputs();
+    updateQuickButtonUI();
+    refreshAi();
+  })();
+</script>
+{% endblock %}
